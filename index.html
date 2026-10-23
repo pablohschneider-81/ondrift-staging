@@ -1069,13 +1069,19 @@
 </style>
 <style id="login-hoja">
   /* ---------- Login: logo arriba + hoja inferior ---------- */
-  .login-screen.login-sheet { justify-content: flex-end; gap: 0; padding: 0 10px calc(10px + env(safe-area-inset-bottom, 0px)); overflow-y: auto; }
+  .login-screen.login-sheet {
+    justify-content: center; gap: 16px; overflow-y: auto;
+    min-height: 100vh; min-height: 100dvh;
+    padding: calc(16px + env(safe-area-inset-top, 0px)) 10px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+  /* En el login no hay barra inferior: sin el hueco de 70 px que reserva #app */
+  #app:has(> .login-screen) { padding-bottom: 0 !important; padding-top: 0 !important; min-height: 0; }
   .login-sheet .login-bubble, .login-sheet .login-wave, .login-sheet .od-login-icon-wrap, .login-sheet .login-back { display: none !important; }
-  .login-sheet .login-logo { flex: 1 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: calc(36px + env(safe-area-inset-top, 0px)) 0 18px; }
-  .login-sheet .login-logo-ring { width: 180px; height: 180px; }
-  .login-sheet .login-logo { animation: none; }
+  .login-sheet .login-logo { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; padding: 0; animation: none; }
   .login-sheet.no-anim .login-card { animation: none; }
-  .login-sheet .login-logo.sm .login-logo-ring { width: 120px; height: 120px; }
+  .login-sheet .login-logo-ring { width: 150px; height: 150px; }
+  .login-sheet .login-logo.sm .login-logo-ring { width: 110px; height: 110px; }
+  @media (max-height: 700px) { .login-sheet .login-logo-ring { width: 120px; height: 120px; } .login-sheet .login-logo.sm .login-logo-ring { width: 90px; height: 90px; } .login-screen.login-sheet { gap: 10px; } }
   .login-sheet .login-card { width: 100%; max-width: 460px; border-radius: 30px; padding: 22px 18px 18px; }
   .login-sheet .login-card h2 { text-align: left; font-size: 1.35rem; margin-bottom: 4px; }
   .login-sheet .login-sub { font-size: 0.84rem; color: var(--text2); line-height: 1.45; margin: 0; text-align: left; }
