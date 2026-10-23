@@ -1028,10 +1028,13 @@ async function dbGetAthletes() {
         const t = await res.json().catch(function () { return {}; });
         S.teamCodeError = t.error || 'Demasiados intentos. Probá de nuevo en unos minutos.';
         rows = [];
+      } else if (!res.ok) {
+        S.teamCodeError = 'Servicio ocupado. Inténtalo de nuevo en unos segundos.';
+        return [];
       } else {
-        rows = res.ok ? await res.json() : [];
+        rows = await res.json();
       }
-    } catch (e) { console.error('team-roster', e.message); rows = []; }
+    } catch (e) { console.error('team-roster', e.message); S.teamCodeError = 'Sin conexión. Inténtalo de nuevo.'; return []; }
   }
   _athleteCache = rows || [];
   return _athleteCache;
@@ -3484,10 +3487,16 @@ function buildAthletePin() {
               // el check-in ya guardado, así que lo volvía a pedir cada vez.
               renderAsync();
             } else {
-              S.athletePinError = (r.data && r.data.error) || 'PIN incorrecto. Inténtalo de nuevo.';
+              S.athletePinError = (r.data && r.data.error) || (r.status >= 500 ? 'Servicio ocupado. Inténtalo de nuevo en unos segundos.' : 'PIN incorrecto. Inténtalo de nuevo.');
               S.athletePinBuffer = '';
               render();
             }
+          })
+          .catch(() => {
+            S.athletePinBusy = false;
+            S.athletePinError = 'Sin conexión. Inténtalo de nuevo.';
+            S.athletePinBuffer = '';
+            render();
           });
       };
       if (k === '⌫') { S.athletePinBuffer = S.athletePinBuffer.slice(0,-1); S.athletePinError = ''; render(); }
