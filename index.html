@@ -1189,6 +1189,157 @@
   .bw-detail .rpelist div { display: flex; justify-content: space-between; padding: 5px 0; border-top: 1px solid var(--line); }
   .bw-detail .rpelist b { color: var(--text); font-weight: 600; }
 </style>
+<style id="liquid-glass">
+  /* ============================================================
+     LIQUID GLASS (estilo Apple iOS 26)
+     Vidrio más transparente con reflejo en los bordes, cápsulas,
+     barra flotante y un fondo con más color para que el vidrio "refracte".
+     ============================================================ */
+  :root {
+    --lg-fill: radial-gradient(130% 70% at 0% 0%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 55%),
+               linear-gradient(155deg, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0.12) 55%, rgba(255,255,255,0.24) 100%);
+    --lg-fill-strong: linear-gradient(155deg, rgba(255,255,255,0.66) 0%, rgba(255,255,255,0.40) 100%);
+    --lg-blur: blur(28px) saturate(210%) brightness(1.06);
+    --lg-shadow: 0 18px 40px -18px rgba(18,60,110,0.38), 0 2px 6px -2px rgba(18,60,110,0.12),
+                 inset 0 1px 1px rgba(255,255,255,0.85), inset 0 -1px 1px rgba(255,255,255,0.25);
+    --lg-shadow-sm: 0 10px 24px -12px rgba(18,60,110,0.34), inset 0 1px 1px rgba(255,255,255,0.85), inset 0 -1px 1px rgba(255,255,255,0.2);
+    --lg-edge: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.55) 18%, rgba(255,255,255,0.06) 45%, rgba(255,255,255,0.10) 60%, rgba(255,255,255,0.6) 85%, #fff 100%);
+    --r-lg: 26px; --r-md: 20px; --r-sm: 14px;
+  }
+
+  /* Fondo con más color: manchas suaves de agua, menta y lavanda para que el vidrio tenga qué mostrar */
+  body {
+    background-color: #dfeefb;
+    background-image:
+      radial-gradient(60% 45% at 8% 6%, rgba(70,165,255,0.70) 0%, transparent 70%),
+      radial-gradient(55% 40% at 95% 22%, rgba(60,215,195,0.58) 0%, transparent 70%),
+      radial-gradient(50% 40% at 12% 58%, rgba(140,125,255,0.40) 0%, transparent 70%),
+      radial-gradient(60% 45% at 92% 82%, rgba(40,135,255,0.55) 0%, transparent 70%),
+      radial-gradient(45% 35% at 45% 105%, rgba(90,225,215,0.50) 0%, transparent 70%);
+    background-attachment: fixed;
+  }
+
+  /* ---------- Vidrio: más transparente, más desenfoque y reflejo en el borde ---------- */
+  .card, .welcome-card, .day-card, .hist-row, .summary-box, .stat-box, .acwr-card, .insc-stat,
+  .insc-matrix-wrap, .athlete-item, .comp-item, .hist-date-section, .login-card, .cal-grid {
+    background: var(--lg-fill) !important;
+    backdrop-filter: var(--lg-blur) !important;
+    -webkit-backdrop-filter: var(--lg-blur) !important;
+    border: 1px solid rgba(255,255,255,0.35) !important;
+    box-shadow: var(--lg-shadow) !important;
+    position: relative;
+  }
+  .summary-box, .stat-box, .acwr-card, .insc-stat, .athlete-item, .comp-item { box-shadow: var(--lg-shadow-sm) !important; }
+  .card, .welcome-card, .login-card, .cal-grid { border-radius: var(--r-lg) !important; }
+  .day-card, .hist-row, .hist-date-section, .insc-matrix-wrap, .summary-box, .stat-box, .athlete-item, .comp-item, .insc-stat { border-radius: var(--r-md) !important; }
+  /* Reflejo: borde brillante arriba-izquierda y abajo-derecha, como un cristal real */
+  .card::before, .welcome-card::before, .login-card::before, .day-card::before, .hist-row::before,
+  .summary-box::before, .stat-box::before, .insc-stat::before, .cal-grid::before, .athlete-item::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.6px; pointer-events: none;
+    background: var(--lg-edge);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  /* Casillas dentro de las tarjetas: vidrio más claro */
+  .hero-blk, .acwr-stats div, .bw-metrics div, .chart-a .chips div, .s4 div, .week-a .d i:not(.done) {
+    background: rgba(255,255,255,0.42) !important;
+    border: 1px solid rgba(255,255,255,0.55);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+  }
+
+  /* ---------- Cabecera: vidrio fino que deja ver lo que pasa por debajo ---------- */
+  .header {
+    background: linear-gradient(180deg, rgba(240,248,255,0.55), rgba(240,248,255,0.25)) !important;
+    backdrop-filter: blur(30px) saturate(200%) !important; -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.5) !important;
+  }
+  .btn-exit { border-radius: 99px !important; background: var(--lg-fill-strong) !important; border: 1px solid rgba(255,255,255,0.7) !important;
+    backdrop-filter: var(--lg-blur); -webkit-backdrop-filter: var(--lg-blur); box-shadow: var(--lg-shadow-sm) !important; }
+  .hdr-avatar { box-shadow: 0 6px 16px -6px rgba(10,132,255,0.6), inset 0 1px 1px rgba(255,255,255,0.7); }
+
+  /* ---------- Barra inferior: cápsula de vidrio flotante ---------- */
+  .bottom-nav {
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important; margin-bottom: 0 !important;
+    width: calc(100% - 28px) !important; border-radius: 999px !important; padding: 5px !important;
+    background: linear-gradient(160deg, rgba(255,255,255,0.50), rgba(255,255,255,0.24)) !important;
+    backdrop-filter: blur(24px) saturate(220%) brightness(1.08) !important; -webkit-backdrop-filter: blur(24px) saturate(220%) brightness(1.08) !important;
+    border: 1px solid rgba(255,255,255,0.45) !important;
+    box-shadow: 0 20px 44px -16px rgba(18,60,110,0.45), inset 0 1px 1px rgba(255,255,255,0.95), inset 0 -1px 1px rgba(255,255,255,0.3) !important;
+  }
+  .bottom-nav::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.2px; pointer-events: none; background: var(--lg-edge);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+  .bottom-nav.labeled .nav-item { border-radius: 999px !important; min-width: 0; padding: 0 4px; transition: flex-grow 0.25s ease, background 0.2s, box-shadow 0.2s, color 0.2s; }
+  /* La pestaña activa se ensancha un poco para que su nombre entero quede dentro del azul (p. ej. "Calendario") */
+  .bottom-nav.labeled .nav-item.active { flex-grow: 1.45; }
+  .bottom-nav.labeled .nav-lbl { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  /* Pestaña activa: gota de vidrio azul con brillo, como en iOS */
+  .bottom-nav.labeled .nav-item.active {
+    background: radial-gradient(120% 90% at 30% 15%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 45%),
+                linear-gradient(180deg, #3d9bff 0%, #0a7cff 60%, #0866d9 100%) !important;
+    box-shadow: 0 8px 20px -6px rgba(10,132,255,0.75), inset 0 1px 1px rgba(255,255,255,0.8), inset 0 -2px 4px rgba(0,40,120,0.25) !important;
+  }
+  .nav-more { border-radius: 26px !important; background: linear-gradient(160deg, rgba(255,255,255,0.72), rgba(255,255,255,0.48)) !important; }
+  .nav-more-item { border-radius: 18px !important; }
+
+  /* ---------- Botones: cápsulas de vidrio ---------- */
+  .btn, .btn-primary, .btn-secondary, .btn-danger, .rpe-menu-cancel, .insc-share button, .insc-toggle { border-radius: 999px !important; }
+  .btn-primary, .btn-primary:active, .insc-share .share {
+    background: radial-gradient(120% 100% at 30% 0%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 50%),
+                linear-gradient(180deg, #3d9bff 0%, #0a7cff 55%, #0866d9 100%) !important;
+    border: 1px solid rgba(255,255,255,0.45) !important;
+    box-shadow: 0 12px 26px -10px rgba(10,132,255,0.75), inset 0 1px 1px rgba(255,255,255,0.75), inset 0 -2px 5px rgba(0,40,120,0.22) !important;
+  }
+  .btn-secondary, .insc-share .dl, .cal-nav, .rpe-more, .sheet-close {
+    background: var(--lg-fill-strong) !important;
+    backdrop-filter: var(--lg-blur); -webkit-backdrop-filter: var(--lg-blur);
+    border: 1px solid rgba(255,255,255,0.7) !important;
+    box-shadow: var(--lg-shadow-sm) !important;
+  }
+  .rpe-more, .cal-nav { border-radius: 999px !important; }
+
+  /* ---------- Selectores segmentados: canal de vidrio con una gota que se mueve ---------- */
+  .seg-a, .login-sheet .seg-a {
+    background: rgba(255,255,255,0.28) !important; border: 1px solid rgba(255,255,255,0.5);
+    border-radius: 999px !important; padding: 4px !important;
+    backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%);
+    box-shadow: inset 0 1px 2px rgba(18,60,110,0.12);
+  }
+  .seg-a button { border-radius: 999px !important; transition: background 0.25s, box-shadow 0.25s, color 0.25s; }
+  .seg-a button.on {
+    background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.75)) !important;
+    box-shadow: 0 4px 12px -4px rgba(18,60,110,0.3), inset 0 1px 1px #fff, inset 0 -1px 1px rgba(18,60,110,0.08) !important;
+  }
+
+  /* ---------- Campos: vidrio claro ---------- */
+  input[type=text], input[type=number], input[type=date], input[type=email], input[type=password], select, textarea, .select-styled {
+    background-color: rgba(255,255,255,0.55) !important;
+    border: 1px solid rgba(255,255,255,0.8) !important;
+    border-radius: 16px !important;
+    box-shadow: inset 0 1px 3px rgba(18,60,110,0.08), 0 1px 0 rgba(255,255,255,0.6) !important;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  textarea { border-radius: 18px !important; }
+
+  /* ---------- Botones de RPE, estado y chips: pequeñas gotas ---------- */
+  .rpe-btn, .fatigue-btn, .pack-btn, .alpha-btn, .insc-chip, .pin-btn {
+    box-shadow: 0 6px 14px -8px rgba(18,60,110,0.35), inset 0 1px 1px rgba(255,255,255,0.75), inset 0 -2px 4px rgba(0,0,0,0.06) !important;
+  }
+  .rpe-btn, .fatigue-btn { border-radius: 16px !important; }
+  .pin-btn { background: var(--lg-fill-strong) !important; border: 1px solid rgba(255,255,255,0.7) !important; backdrop-filter: var(--lg-blur); -webkit-backdrop-filter: var(--lg-blur); }
+
+  /* ---------- Hojas y menús: vidrio grande con esquinas muy redondeadas ---------- */
+  .bottom-sheet { border-radius: 34px 34px 0 0 !important; background: linear-gradient(170deg, rgba(250,253,255,0.78), rgba(240,248,255,0.62)) !important; }
+  .rpe-menu-box, .confirm-box { border-radius: 30px !important; background: linear-gradient(165deg, rgba(252,254,255,0.85), rgba(242,249,255,0.7)) !important;
+    backdrop-filter: blur(30px) saturate(200%) !important; -webkit-backdrop-filter: blur(30px) saturate(200%) !important; }
+  .rpe-menu-item { border-radius: 20px !important; }
+  .rpe-menu-cancel { background: linear-gradient(165deg, rgba(255,255,255,0.92), rgba(255,255,255,0.75)) !important; }
+
+  /* Menos transparencia si el teléfono lo pide */
+  @media (prefers-reduced-transparency: reduce) {
+    .card, .welcome-card, .login-card, .bottom-nav, .header { background: rgba(246,250,254,0.94) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+  }
+</style>
+
 </head>
 <body>
 <!-- ============================================================ -->
