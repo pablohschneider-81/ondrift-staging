@@ -1089,6 +1089,106 @@
   .login-sheet input.select-styled { text-align: left !important; }
   .login-sheet input.select-styled::placeholder { text-transform: none; letter-spacing: normal; font-weight: 500; color: #8aa0b4; }
 </style>
+<style id="form-sesion">
+  /* ---------- Crear sesión: campos en pares ---------- */
+  .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-row-2 > div { min-width: 0; }
+  .form-row-2 select, .form-row-2 input { width: 100%; }
+  .form-row-2 select { padding-right: 34px;
+    background: rgba(255,255,255,0.78) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' stroke='%234a6a86' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 12px center; }
+  .form-row-2 input[type=date] { padding: 0 10px; font-size: 0.9rem; }
+</style>
+<style id="insc-graficos">
+  /* ---------- Inscripciones ---------- */
+  .insc-matrix .ix { color: var(--text); font-weight: 800; font-size: 0.95rem; }
+  .insc-toggle-row { display: flex; justify-content: flex-end; margin-top: 10px; }
+  .insc-toggle { all: unset; box-sizing: border-box; font-size: 0.8rem; font-weight: 600; padding: 8px 14px; border-radius: 12px; cursor: pointer; }
+  .insc-toggle.close { background: rgba(229,72,77,0.1); color: var(--red2); border: 1px solid rgba(229,72,77,0.28); }
+  .insc-toggle.open { background: rgba(15,157,88,0.1); color: var(--green); border: 1px solid rgba(15,157,88,0.3); }
+  .insc-toggle:focus-visible, .insc-share button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .insc-share { padding: 14px; margin: 0 0 14px; }
+  .insc-share .t { font-family: var(--font-display); font-weight: 700; font-size: 1rem; }
+  .insc-share .s { font-size: 0.76rem; color: var(--text2); margin-top: 2px; }
+  .insc-share .row { display: grid; grid-template-columns: 1.3fr 1fr; gap: 8px; margin-top: 12px; }
+  .insc-share button { display: flex; align-items: center; justify-content: center; gap: 7px; height: 46px; border-radius: 14px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: 0; font-family: var(--font); }
+  .insc-share .share { color: #fff; background: linear-gradient(180deg, rgba(255,255,255,0.32), rgba(255,255,255,0) 50%), var(--accent); box-shadow: 0 10px 22px -8px rgba(10,132,255,0.7), inset 0 1px 0 rgba(255,255,255,0.55); }
+  .insc-share .dl { color: var(--text); background: rgba(255,255,255,0.8); border: 1px solid #fff; box-shadow: var(--glass-shadow-sm); }
+  .insc-share svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ---------- Gráficos de planificación ---------- */
+  .chart-a { padding: 14px 12px 12px; }
+  .chart-a svg { display: block; width: 100%; height: auto; }
+  .chart-a .readout { font-size: 0.74rem; color: var(--text2); min-height: 1.2em; margin: 0 2px 4px; }
+  .chart-a .readout b { color: var(--text); font-variant-numeric: tabular-nums; }
+  .chart-a [data-tip] { cursor: pointer; }
+  .chart-a .chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+  .chart-a .chips div { background: rgba(255,255,255,0.72); border-radius: 11px; padding: 7px 4px; text-align: center; font-size: 0.6rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.04em; }
+  .chart-a .chips b { display: block; font-family: var(--font-display); font-size: 0.98rem; font-weight: 800; color: var(--text); text-transform: none; letter-spacing: 0; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .chart-a .chips small { display: block; font-size: 0.64rem; font-weight: 700; text-transform: none; letter-spacing: 0; }
+  .chart-a .legend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 0.7rem; color: var(--text2); margin-top: 8px; }
+  .chart-a .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
+  .chart-a .note { font-size: 0.7rem; color: var(--text2); margin-top: 8px; line-height: 1.45; }
+</style>
+<style id="acwr-grilla">
+  /* ---------- ACWR por atleta: grilla de 3 con barra de zona y semáforo ---------- */
+  .acwr-g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+  .acwr-c { padding: 10px 9px 9px; margin: 0; cursor: pointer; border-radius: var(--r-md); }
+  .acwr-c:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .acwr-c .nm { font-size: 0.82rem; font-weight: 700; text-align: center; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .acwr-c .v { font-family: var(--font-display); font-weight: 800; font-size: 1.4rem; letter-spacing: -0.02em; text-align: center; line-height: 1.15; font-variant-numeric: tabular-nums; }
+  .acwr-c .v small { font-size: 0.8rem; }
+  .acwr-c .zl { font-size: 0.56rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; text-align: center; }
+  .acwr-c .zb { position: relative; height: 5px; border-radius: 99px; margin: 6px 2px 8px;
+    background: linear-gradient(90deg, rgba(10,132,255,0.35) 0 40%, rgba(15,157,88,0.35) 40% 65%, rgba(217,119,6,0.4) 65% 75%, rgba(229,72,77,0.4) 75%); }
+  .acwr-c .zb.cal { opacity: 0.45; }
+  .acwr-c .zb i { position: absolute; top: -3px; width: 4px; height: 11px; border-radius: 2px; background: var(--text); transform: translateX(-50%); box-shadow: 0 0 0 1.5px rgba(255,255,255,0.9); }
+  .acwr-c .rw { display: flex; align-items: center; gap: 5px; font-size: 0.7rem; color: var(--text2); line-height: 1.65; }
+  .acwr-c .rw::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--dc, #b8c6d3); flex: none; }
+  .acwr-c .rw b { margin-left: auto; color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .acwr-c .more { display: none; font-size: 0.62rem; color: var(--text2); border-top: 1px solid var(--line); margin-top: 6px; padding-top: 5px; line-height: 1.45; }
+  .acwr-c.open .more { display: block; }
+  @media (max-width: 360px) { .acwr-c .rw { font-size: 0.64rem; } .acwr-c .v { font-size: 1.25rem; } }
+</style>
+<style id="bienestar-hoy">
+  /* ---------- Bienestar hoy ---------- */
+  .bw-head { display: flex; justify-content: space-between; align-items: baseline; margin: 6px 2px 10px; }
+  .bw-head .section-title { margin: 0; }
+  .bw-head small { font-size: 0.7rem; color: var(--text2); font-weight: 500; }
+  .bw-card { padding: 4px 14px; margin-bottom: 8px; }
+  .bw-sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 11px 0 10px; border-bottom: 1px solid var(--line); text-align: center; }
+  .bw-sum span { font-size: 0.6rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
+  .bw-sum b { display: block; font-family: var(--font-display); font-size: 1.2rem; font-weight: 800; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+  .bw-row { display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .bw-row:last-child { border-bottom: 0; }
+  .bw-score { width: 46px; height: 46px; flex: none; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-family: var(--font-display); font-weight: 800; font-size: 1.05rem; line-height: 1; font-variant-numeric: tabular-nums; }
+  .bw-score small { font: 600 0.55rem var(--font); opacity: 0.85; margin-top: 2px; }
+  .bw-score.none { background: rgba(74,106,134,0.16); color: var(--text2); font-size: 0.8rem; }
+  .bw-main { flex: 1; min-width: 0; }
+  .bw-name { font-size: 0.92rem; font-weight: 600; color: var(--text); }
+  .bw-base { font-size: 0.72rem; color: var(--text2); margin-top: 1px; }
+  .bw-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 8px; }
+  .bw-metrics div { background: rgba(255,255,255,0.72); border-radius: 9px; padding: 4px 3px; text-align: center; font-size: 0.56rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.04em; }
+  .bw-metrics b { display: block; white-space: nowrap; font-family: var(--font-display); font-size: 0.86rem; font-weight: 800; letter-spacing: 0; text-transform: none; font-variant-numeric: tabular-nums; }
+  .bw-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
+  .bw-chip { font-size: 0.64rem; font-weight: 700; padding: 3px 7px; border-radius: 7px; }
+  .bw-chip.low { background: rgba(229,72,77,0.1); color: var(--red2); }
+  .bw-chip.mid { background: rgba(217,119,6,0.12); color: var(--orange); }
+  .bw-flag { font-size: 0.64rem; font-weight: 700; padding: 3px 8px; border-radius: 99px; color: #fff; }
+  .bw-flag.adj { background: var(--red); }
+  .bw-flag.talk { background: #5e5ce6; }
+  .bw-ok { display: flex; align-items: center; gap: 8px; padding: 11px 0; font-size: 0.8rem; font-weight: 600; color: var(--green); }
+  .bw-ok svg { width: 17px; height: 17px; flex: none; }
+  .bw-disc { font-size: 0.68rem; color: var(--text2); margin: 0 2px 16px; line-height: 1.4; }
+  .bw-detail .spark { padding: 4px 12px 2px; }
+  .bw-detail .spark .lbl { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--text2); }
+  .bw-detail .spark svg { display: block; width: 100%; height: 56px; margin-top: 4px; }
+  .bw-detail .items4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 8px 12px 4px; }
+  .bw-detail .items4 div { text-align: center; font-size: 0.56rem; font-weight: 600; color: var(--text2); text-transform: uppercase; background: rgba(11,34,54,0.05); border-radius: 9px; padding: 5px 2px; }
+  .bw-detail .items4 b { display: block; font-family: var(--font-display); font-size: 0.95rem; font-weight: 800; text-transform: none; color: var(--text); }
+  .bw-detail .rpelist { margin: 6px 12px 6px; font-size: 0.74rem; color: var(--text2); }
+  .bw-detail .rpelist div { display: flex; justify-content: space-between; padding: 5px 0; border-top: 1px solid var(--line); }
+  .bw-detail .rpelist b { color: var(--text); font-weight: 600; }
+</style>
 </head>
 <body>
 <!-- ============================================================ -->
@@ -4377,7 +4477,7 @@ function buildBottomNav() {
   };
   if (S.role === 'coach') {
     // Índices de S.tab: 0 Sesión · 1 RPE · 2 Escuadra · 3 Calendario · 4 Inscripciones · 5 Equipo · 6 Historial · 7 Asistencia
-    const go = function(i) { return function() { S.tab = i; S.navMore = false; S.rpeMenuAthlete = null; render(); }; };
+    const go = function(i) { return function() { S.tab = i; S.navMore = false; S.rpeMenuAthlete = null; S.bwDetail = null; render(); }; };
     const MORE = [{ tab: 4, icon: 'inscr', label: 'Inscripciones' }, { tab: 6, icon: 'historial', label: 'Historial' }, { tab: 7, icon: 'asistencia', label: 'Asistencia' }];
     const inMore = MORE.some(function(m) { return m.tab === S.tab; });
     nav.appendChild(mk('sesion', 'Sesión', S.tab === 0, go(0)));
@@ -4448,31 +4548,39 @@ function buildCoachSession() {
   titleIn.oninput = e => { S.sessionTitle = e.target.value; };
   d.appendChild(titleIn);
 
-  // RPE
-  const l2 = document.createElement('label'); l2.className = 'field-label'; l2.textContent = 'RPE Objetivo (1–10)';
-  d.appendChild(l2);
-  const rpeIn = document.createElement('input');
-  rpeIn.type = 'number'; rpeIn.min = 1; rpeIn.max = 10; rpeIn.value = S.sessionRPE;
-  rpeIn.oninput = e => {
-    const v = parseInt(e.target.value);
-    S.sessionRPE = isNaN(v) ? 6 : Math.min(10, Math.max(1, v));
+  // RPE objetivo y duración: desplegables, uno al lado del otro
+  const pairField = function(labelText, control) {
+    const w = document.createElement('div');
+    const l = document.createElement('label'); l.className = 'field-label'; l.textContent = labelText;
+    w.append(l, control);
+    return w;
   };
-  d.appendChild(rpeIn);
+  const rpeIn = document.createElement('select');
+  for (let v = 1; v <= 10; v++) {
+    const o = document.createElement('option'); o.value = v; o.textContent = v + ' / 10';
+    if (v === S.sessionRPE) o.selected = true;
+    rpeIn.appendChild(o);
+  }
+  rpeIn.onchange = e => { S.sessionRPE = parseInt(e.target.value) || 6; };
 
-  // Duración (min) — para sRPE = RPE × duración
-  const lDur = document.createElement('label'); lDur.className = 'field-label'; lDur.textContent = 'Duración (min)';
-  d.appendChild(lDur);
-  const durIn = document.createElement('input');
-  durIn.type = 'number'; durIn.min = 10; durIn.max = 300; durIn.value = S.sessionDuration;
-  durIn.oninput = e => {
-    const v = parseInt(e.target.value);
-    S.sessionDuration = isNaN(v) ? 80 : Math.min(300, Math.max(10, v));
-  };
-  d.appendChild(durIn);
+  // Duración (min) — para sRPE = RPE × duración. De 5 en 5 entre 30 min y 3 h; se conserva un valor guardado que no esté en la lista.
+  const durIn = document.createElement('select');
+  const durOpts = [];
+  for (let m = 30; m <= 180; m += 5) durOpts.push(m);
+  if (durOpts.indexOf(S.sessionDuration) < 0) { durOpts.push(S.sessionDuration); durOpts.sort(function(a, b) { return a - b; }); }
+  durOpts.forEach(function(m) {
+    const o = document.createElement('option'); o.value = m;
+    o.textContent = m + ' min' + (m >= 60 ? ' · ' + Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) : '') : '');
+    if (m === S.sessionDuration) o.selected = true;
+    durIn.appendChild(o);
+  });
+  durIn.onchange = e => { S.sessionDuration = parseInt(e.target.value) || 80; };
+
+  const row1 = document.createElement('div'); row1.className = 'form-row-2';
+  row1.append(pairField('RPE objetivo', rpeIn), pairField('Duración', durIn));
+  d.appendChild(row1);
 
   // Phase
-  const l3 = document.createElement('label'); l3.className = 'field-label'; l3.textContent = 'Fase';
-  d.appendChild(l3);
   const phaseSelect = document.createElement('select');
   // Físico → solo Fuerza (NeuroForce). Mañana/Tarde/Única → nunca Fuerza.
   if (S.sessionSlot === 'fis') S.sessionPhase = 'Fuerza';
@@ -4485,15 +4593,15 @@ function buildCoachSession() {
     phaseSelect.appendChild(o);
   });
   phaseSelect.onchange = e => { S.sessionPhase = e.target.value; S.alphaPhase = null; render(); };
-  d.appendChild(phaseSelect);
 
   // Date
-  const l4 = document.createElement('label'); l4.className = 'field-label'; l4.textContent = 'Fecha';
-  d.appendChild(l4);
   const dateIn = document.createElement('input');
   dateIn.type = 'date'; dateIn.value = S.sessionDate;
   dateIn.oninput = e => { S.sessionDate = e.target.value; };
-  d.appendChild(dateIn);
+
+  const row2 = document.createElement('div'); row2.className = 'form-row-2';
+  row2.append(pairField('Fase', phaseSelect), pairField('Fecha', dateIn));
+  d.appendChild(row2);
 
   // Turno selector
   const lturno = document.createElement('label'); lturno.className = 'field-label'; lturno.textContent = 'Turno';
@@ -5154,6 +5262,182 @@ function buildLactateModal() {
   return ov;
 }
 
+// ============================================================
+// BIENESTAR HOY (Escuadra): check-in vs. su media + ACWR + RPE y cansancio
+// ============================================================
+async function dbGetTeamWellness(days) {
+  const from = new Date(); from.setDate(from.getDate() - (days - 1));
+  const fromS = from.getFullYear()+'-'+String(from.getMonth()+1).padStart(2,'0')+'-'+String(from.getDate()).padStart(2,'0');
+  const rows = await sbFetch('wellness_entries?select=date,sleep,soreness,fatigue,stress,athletes(name)&date=gte.' + fromS + '&order=date.asc');
+  const map = {};
+  (rows || []).forEach(function(r) {
+    const name = r.athletes && r.athletes.name;
+    if (!name) return;
+    (map[name] = map[name] || []).push({ date: r.date, sleep: r.sleep, soreness: r.soreness, fatigue: r.fatigue, stress: r.stress });
+  });
+  return map;
+}
+
+// Análisis de un nadador. Cortes orientativos (índice de Hooper + escala de la app):
+// bajo su base = 3 puntos menos que su media de 14 días, o total < 11, o alguna pregunta en 1–2.
+function wellnessStatusA(name, acwrItem) {
+  const today = todayStr();
+  const hist = (DATA.teamWellHist && DATA.teamWellHist[name]) || [];
+  const todayW = getDayWellness(today)[name] || hist.find(function(h) { return h.date === today; }) || null;
+  const comp = wellComposite(todayW);
+  const prev = hist.filter(function(h) { return h.date !== today; }).map(wellComposite).filter(function(c) { return c != null; });
+  const base = prev.length >= 3 ? Math.round(prev.reduce(function(a, b) { return a + b; }, 0) / prev.length * 10) / 10 : null;
+  const lowItems = todayW ? WELL_QS.filter(function(q) { return todayW[q.key] != null && todayW[q.key] <= 2; }) : [];
+  const midItems = todayW ? WELL_QS.filter(function(q) { return todayW[q.key] === 3; }) : [];
+  const below = comp != null && ((base != null && comp <= base - 3) || comp < 11 || lowItems.length > 0);
+
+  // Racha de check-in: días seguidos (hasta hoy) con Sueño o Cabeza en 1–2
+  let wellStreak = 0;
+  const byDate = {}; hist.forEach(function(h) { byDate[h.date] = h; });
+  if (todayW) byDate[today] = todayW;
+  for (let i = 0; i < 14; i++) {
+    const w = byDate[dateOffsetA(today, -i)];
+    if (w && ((w.sleep != null && w.sleep <= 2) || (w.stress != null && w.stress <= 2))) wellStreak++; else break;
+  }
+
+  // RPE y cansancio: último registro y días seguidos marcando Cansado/Agotado (4–5)
+  const rpeHist = DATA.athleteHist[name] || [];
+  const last = rpeHist.length ? rpeHist[rpeHist.length - 1] : null;
+  const fatByDate = {};
+  rpeHist.forEach(function(h) { if (h.fatigue != null) fatByDate[h.date] = Math.max(fatByDate[h.date] || 0, h.fatigue); });
+  const fatDates = Object.keys(fatByDate).sort().reverse();
+  let tiredStreak = 0;
+  for (let i = 0; i < fatDates.length; i++) { if (fatByDate[fatDates[i]] >= 4) tiredStreak++; else break; }
+
+  const acwrNum = acwrItem ? (typeof acwrItem.raw === 'number' ? acwrItem.raw : acwrItem.raw && acwrItem.raw.value) : null;
+  const acwrHigh = !!(acwrItem && (acwrItem.info.label === 'Riesgo' || acwrItem.info.label === 'Atención'));
+  const tired = tiredStreak >= 2;
+  const adjust = acwrHigh && (below || tired);
+  const talk = wellStreak >= 3 || tiredStreak >= 3;
+  return { name: name, todayW: todayW, comp: comp, base: base, lowItems: lowItems, midItems: midItems, below: below,
+    wellStreak: wellStreak, last: last, lastFat: last ? (FATIGUE.find(function(f) { return f.v === last.fatigue; }) || null) : null,
+    tiredStreak: tiredStreak, tired: tired, acwrItem: acwrItem, acwrNum: acwrNum, acwrHigh: acwrHigh, adjust: adjust, talk: talk,
+    flagged: below || tired || talk, hist: hist };
+}
+
+function buildWellnessBlockA(acwrData) {
+  const wrap = document.createElement('div');
+  const athletes = getAthletes();
+  const byName = {}; (acwrData || []).forEach(function(x) { byName[x.name] = x; });
+  const all = athletes.map(function(n) { return wellnessStatusA(n, byName[n]); });
+  const withCheckin = all.filter(function(s) { return s.comp != null; }).length;
+  const flagged = all.filter(function(s) { return s.flagged; }).sort(function(a, b) {
+    const pa = a.adjust ? 0 : a.talk ? 1 : 2, pb = b.adjust ? 0 : b.talk ? 1 : 2;
+    if (pa !== pb) return pa - pb;
+    return (a.comp == null ? 99 : a.comp) - (b.comp == null ? 99 : b.comp);
+  });
+  const nAdjust = flagged.filter(function(s) { return s.adjust; }).length;
+  const nBelow = all.filter(function(s) { return s.below; }).length;
+
+  const head = document.createElement('div'); head.className = 'bw-head';
+  head.innerHTML = '<div class="section-title">Bienestar hoy</div><small>vs. su media de 14 días</small>';
+  wrap.appendChild(head);
+  const card = document.createElement('div'); card.className = 'card bw-card';
+  let html = '<div class="bw-sum">'
+    + '<span>Check-in<b>' + withCheckin + '/' + athletes.length + '</b></span>'
+    + '<span>Bajo su base<b style="color:' + (nBelow ? 'var(--orange)' : 'var(--text)') + '">' + nBelow + '</b></span>'
+    + '<span>Ajustar hoy<b style="color:' + (nAdjust ? 'var(--red)' : 'var(--text)') + '">' + nAdjust + '</b></span></div>';
+  const ink = function(label) { return { 'Riesgo': '#e5484d', 'Atención': '#d97706', 'Óptimo': '#0f9d58', 'Subcarga': '#0a84ff', 'Calibrando': '#7d93a8' }[label] || 'var(--text)'; };
+  flagged.forEach(function(s) {
+    const scoreHtml = s.comp != null
+      ? '<div class="bw-score" style="background:' + wellCompColor(s.comp) + '">' + s.comp + '<small>/20</small></div>'
+      : '<div class="bw-score none">—</div>';
+    const baseTxt = s.comp == null ? 'Sin check-in hoy'
+      : (s.base != null ? 'Su media ' + String(s.base).replace('.', ',') + ' · ' + (s.comp - s.base >= 0 ? '+' : '−') + String(Math.abs(Math.round((s.comp - s.base) * 10) / 10)).replace('.', ',') : 'Todavía sin media (menos de 3 check-ins)');
+    const metrics = '<div class="bw-metrics">'
+      + '<div>ACWR<b style="color:' + (s.acwrItem ? ink(s.acwrItem.info.label) : 'var(--text2)') + '">' + (s.acwrNum != null ? Number(s.acwrNum).toFixed(2) : '—') + '</b></div>'
+      + '<div>Últ. RPE<b' + (s.last ? ' style="color:' + rpeColor(s.last.rpe) + '"' : '') + '>' + (s.last ? s.last.rpe : '—') + '</b></div>'
+      + '<div>Estado<b' + (s.lastFat ? ' style="color:' + s.lastFat.color + '"' : '') + '>' + (s.lastFat ? s.lastFat.label : '—') + '</b></div></div>';
+    let chips = '';
+    s.lowItems.forEach(function(q) { chips += '<span class="bw-chip low">' + q.lbl + ' ' + s.todayW[q.key] + '</span>'; });
+    if (s.below) s.midItems.forEach(function(q) { chips += '<span class="bw-chip mid">' + q.lbl + ' ' + s.todayW[q.key] + '</span>'; });
+    if (s.adjust) chips += '<span class="bw-flag adj">Ajustar hoy</span>';
+    if (s.tired) chips += '<span class="bw-flag talk" style="background:' + (s.tiredStreak >= 3 ? '#5e5ce6' : 'var(--orange)') + '">Cansado ' + s.tiredStreak + ' días seguidos</span>';
+    if (s.wellStreak >= 3) chips += '<span class="bw-flag talk">' + s.wellStreak + ' días mal en sueño o cabeza</span>';
+    if (s.talk) chips += '<span class="bw-flag talk">Hablar con él</span>';
+    html += '<div class="bw-row">' + scoreHtml + '<div class="bw-main"><div class="bw-name">' + escapeHtml(s.name) + '</div><div class="bw-base">' + baseTxt + '</div>'
+      + metrics + (chips ? '<div class="bw-chips">' + chips + '</div>' : '') + '</div>'
+      + '<button class="rpe-more" data-bw-ath="' + escapeHtml(s.name) + '" aria-label="Detalle de ' + escapeHtml(s.name) + '"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button></div>';
+  });
+  const okCount = athletes.length - flagged.length;
+  if (!flagged.length) {
+    html += '<div class="bw-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Todo el equipo está en su línea</div>';
+  } else if (okCount > 0) {
+    html += '<div class="bw-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Los otros ' + okCount + ' están en su línea</div>';
+  }
+  card.innerHTML = html;
+  wrap.appendChild(card);
+  const disc = document.createElement('div'); disc.className = 'bw-disc';
+  disc.textContent = 'Para ajustar la sesión del día y hablar con el nadador, no para predecir lesiones.';
+  wrap.appendChild(disc);
+
+  // Detalle del nadador elegido: 14 días de check-in, respuestas de hoy, últimos RPE y comentario
+  card.addEventListener('click', function(e) {
+    const b = e.target.closest('[data-bw-ath]');
+    if (b) { S.bwDetail = b.dataset.bwAth; render(); }
+  });
+  if (S.bwDetail) {
+    const s = all.find(function(x) { return x.name === S.bwDetail; });
+    if (s) wrap.appendChild(buildWellnessDetailA(s));
+  }
+  return wrap;
+}
+
+function buildWellnessDetailA(s) {
+  const frag = document.createElement('div');
+  const back = document.createElement('div'); back.className = 'rpe-menu-back';
+  back.onclick = function() { S.bwDetail = null; render(); };
+  const menu = document.createElement('div'); menu.className = 'rpe-menu bw-detail'; menu.setAttribute('role', 'dialog');
+  // Mini línea de 14 días con su media punteada
+  const today = todayStr();
+  const pts = [];
+  for (let i = 13; i >= 0; i--) {
+    const ds = dateOffsetA(today, -i);
+    const w = ds === today ? s.todayW : s.hist.find(function(h) { return h.date === ds; });
+    pts.push(wellComposite(w));
+  }
+  const W = 280, H = 56, y = function(v) { return H - 4 - ((v - 4) / 16) * (H - 8); };
+  const xs = function(i) { return 4 + i * (W - 8) / 13; };
+  let path = '', dots = '';
+  pts.forEach(function(v, i) {
+    if (v == null) return;
+    path += (path ? ' L' : 'M') + xs(i).toFixed(1) + ' ' + y(v).toFixed(1);
+    dots += '<circle cx="' + xs(i).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="' + (i === 13 ? 4 : 2.5) + '" fill="' + (i === 13 ? wellCompColor(v) : '#0a84ff') + '"/>';
+  });
+  const baseLine = s.base != null ? '<line x1="0" x2="' + W + '" y1="' + y(s.base).toFixed(1) + '" y2="' + y(s.base).toFixed(1) + '" stroke="rgba(74,106,134,0.45)" stroke-dasharray="4 4"/>' : '';
+  const items = WELL_QS.map(function(q) {
+    const v = s.todayW ? s.todayW[q.key] : null;
+    return '<div>' + q.lbl + '<b style="color:' + (v == null ? 'var(--text2)' : (WELL_SCALE_COLORS[v] || 'var(--text)')) + '">' + (v == null ? '—' : v) + '</b></div>';
+  }).join('');
+  const rpeHist = (DATA.athleteHist[s.name] || []).slice(-4).reverse();
+  const rpeRows = rpeHist.map(function(h) {
+    const f = FATIGUE.find(function(x) { return x.v === h.fatigue; });
+    return '<div><span>' + formatDateLabel(h.date) + '</span><b>RPE ' + h.rpe + (f ? ' · <span style="color:' + f.color + '">' + f.label + '</span>' : '') + '</b></div>';
+  }).join('');
+  menu.innerHTML = '<div class="rpe-menu-box"><div class="rpe-menu-ttl">' + escapeHtml(s.name) + ' · bienestar</div>'
+    + '<div class="spark"><div class="lbl"><span>Check-in · últimos 14 días</span><span>' + (s.base != null ? 'media ' + String(s.base).replace('.', ',') : 'sin media') + '</span></div>'
+    + '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' + baseLine + (path ? '<path d="' + path + '" fill="none" stroke="#0a84ff" stroke-width="2" stroke-linejoin="round"/>' : '') + dots + '</svg></div>'
+    + '<div class="items4">' + items + '</div>'
+    + (rpeRows ? '<div class="rpelist">' + rpeRows + '</div>' : '')
+    + '<button class="rpe-menu-item" data-bw-comment="1"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg>Escribir comentario a ' + escapeHtml(s.name.split(' ')[0]) + '</button></div>'
+    + '<button class="rpe-menu-cancel" data-bw-close="1">Cerrar</button>';
+  menu.addEventListener('click', function(e) {
+    if (e.target.closest('[data-bw-close]')) { S.bwDetail = null; render(); return; }
+    if (e.target.closest('[data-bw-comment]')) {
+      S.bwDetail = null; S.commentAthlete = s.name; S.commentDate = null;
+      S.commentText = getComments()[todayStr() + '_' + s.name] || '';
+      render();
+    }
+  });
+  frag.append(back, menu);
+  return frag;
+}
+
 function buildCoachSquad() {
   const d = document.createElement('div');
   const st = document.createElement('div'); st.className = 'section-title'; st.textContent = 'Escuadra';
@@ -5161,8 +5445,9 @@ function buildCoachSquad() {
   const athletes = getAthletes();
 
   // ── Cargar historial de todos + asistencia (una sola vez por sesión de la app) ──
-  if (!DATA.allHistLoaded || !DATA.attendancePct || !DATA.attendanceSum) {
+  if (!DATA.allHistLoaded || !DATA.attendancePct || !DATA.attendanceSum || !DATA.teamWellHist) {
     Promise.all([
+      DATA.teamWellHist ? Promise.resolve() : dbGetTeamWellness(14).then(function(m) { DATA.teamWellHist = m; }).catch(function() { DATA.teamWellHist = {}; }),
       DATA.allHistLoaded ? Promise.resolve() : dbGetAllAthleteHist().then(function(map) {
         Object.keys(map).forEach(function(name) { DATA.athleteHist[name] = map[name]; });
         DATA.allHistLoaded = true;
@@ -5241,6 +5526,7 @@ function buildCoachSquad() {
     return vb - va;
   });
 
+  d.appendChild(buildWellnessBlockA(acwrData));
   d.appendChild(buildSquadSummaryA(acwrData));
 
   const at = document.createElement('div'); at.className = 'section-title'; at.textContent = 'Carga · ACWR por atleta';
@@ -5275,7 +5561,12 @@ function buildCoachSquad() {
   };
   const attColOf = function(p) { return p == null ? '#7d93a8' : p >= 85 ? '#0f9d58' : p >= 70 ? '#d97706' : '#e5484d'; };
   const attStrOf = function(p) { return p == null ? '—' : Math.round(p) + '%'; };
-  const cards = document.createElement('div');
+  const cards = document.createElement('div'); cards.className = 'acwr-g3';
+  // Semáforo de cada dato: verde bien, naranja atención, rojo mal
+  const okW = '#0f9d58', midW = '#d97706', badW = '#e5484d';
+  const rpeDot = function(v) { return v == null ? null : v <= 5 ? okW : v <= 8 ? midW : badW; };
+  const attDot = function(p) { return p == null ? null : p >= 85 ? okW : p >= 70 ? midW : badW; };
+  if (!S.acwrOpen) S.acwrOpen = {};
   acwrData.forEach(function(x) {
     const isCal = x.info.calibrating;
     const num = isCal ? x.raw.value : x.raw;
@@ -5286,22 +5577,36 @@ function buildCoachSquad() {
     const att = (DATA.attendanceSum || {})[x.name] || {};
     const ms = calcMonotonyStrain(x.name);
     const mLbl = ms ? monotonyLabel(ms.monotony) : null;
+    const row = function(label, val, dot) {
+      return '<div class="rw"' + (dot ? ' style="--dc:' + dot + '"' : '') + '>' + label + '<b>' + val + '</b></div>';
+    };
+    const extra = [];
+    if (lastRpe) extra.push('Último RPE: ' + lastRpe.date.slice(5).split('-').reverse().join('/'));
+    if (att.n_month) extra.push('Mes: ' + att.n_month + ' sesiones');
+    if (att.n_total) extra.push('Total: ' + att.n_total + ' sesiones');
+    if (mLbl) extra.push('Monotonía ' + mLbl.label.toLowerCase() + (ms && ms.strain != null ? ' · strain ' + ms.strain : ''));
+    if (isCal) extra.push('Provisional: ' + x.raw.days + ' días con carga');
+    if (est) extra.push('≈ incluye una sesión estimada en 80 min');
 
     const card = document.createElement('div');
-    card.className = 'card acwr-wide';
-    if (est) card.title = 'Incluye sesión sin duración real registrada (estimada en 80 min)';
+    card.className = 'card acwr-c' + (S.acwrOpen[x.name] ? ' open' : '');
+    card.tabIndex = 0;
+    card.setAttribute('role', 'button');
+    card.setAttribute('aria-expanded', S.acwrOpen[x.name] ? 'true' : 'false');
     card.innerHTML =
-      '<div class="top"><span class="nm">' + escapeHtml(x.name) + '</span>' +
-        '<span class="acwr-zpill" style="background:' + (zoneTint[x.info.label] || zoneTint.Calibrando) + ';color:' + ink + '">' + (isCal ? 'Provisional' : x.info.label) + '</span>' +
-        '<span class="v" style="color:' + ink + '">' + Number(num).toFixed(2) + (isCal ? '<small>*</small>' : '') + (est ? '<small>≈</small>' : '') + '</span></div>' +
-      '<div class="acwr-zbar' + (isCal ? ' cal' : '') + '"><i style="left:' + barPos(num).toFixed(1) + '%"></i></div>' +
-      '<div class="acwr-stats">' +
-        '<div>Últ. RPE<b' + (lastRpe ? ' style="color:' + rpeColor(lastRpe.rpe) + '"' : '') + '>' + (lastRpe ? lastRpe.rpe : '—') + '</b><small>' + (lastRpe ? lastRpe.date.slice(5).split('-').reverse().join('/') : 'sin RPE') + '</small></div>' +
-        '<div title="Asistencia del mes en curso">Asist. mes<b style="color:' + attColOf(att.pct_month) + '">' + attStrOf(att.pct_month) + '</b><small>' + (att.n_month ? att.n_month + ' ses.' : '&nbsp;') + '</small></div>' +
-        '<div title="Asistencia total">Asist. total<b style="color:' + attColOf(att.pct_total) + '">' + attStrOf(att.pct_total) + '</b><small>' + (att.n_total ? att.n_total + ' ses.' : '&nbsp;') + '</small></div>' +
-        '<div title="Monotonía semanal' + (ms && ms.strain != null ? ' · Strain ' + ms.strain : '') + '">Monotonía<b' + (mLbl ? ' style="color:' + mLbl.color + '"' : '') + '>' + (ms ? (ms.flatWeek ? '∞' : ms.monotony) : '—') + '</b><small>' + (mLbl ? mLbl.label.toLowerCase() : '&nbsp;') + '</small></div>' +
-      '</div>' +
-      (isCal ? '<div class="acwr-est">Provisional: ' + x.raw.days + ' días con carga, hacen falta ~3 semanas para que sea fiable.</div>' : '');
+      '<div class="nm">' + escapeHtml(x.name.split(' ')[0]) + '</div>' +
+      '<div class="v" style="color:' + ink + '">' + Number(num).toFixed(2) + (isCal ? '<small>*</small>' : '') + (est ? '<small>≈</small>' : '') + '</div>' +
+      '<div class="zl" style="color:' + ink + '">' + (isCal ? 'Provisional' : x.info.label) + '</div>' +
+      '<div class="zb' + (isCal ? ' cal' : '') + '"><i style="left:' + barPos(num).toFixed(1) + '%"></i></div>' +
+      row('RPE', lastRpe ? lastRpe.rpe : '—', rpeDot(lastRpe ? lastRpe.rpe : null)) +
+      row('Monot.', ms ? (ms.flatWeek ? '∞' : ms.monotony) : '—', mLbl ? mLbl.color : null) +
+      row('Mes', attStrOf(att.pct_month), attDot(att.pct_month)) +
+      row('Total', attStrOf(att.pct_total), attDot(att.pct_total)) +
+      (extra.length ? '<div class="more">' + extra.map(escapeHtml).join('<br>') + '</div>' : '');
+    // Tocar la tarjeta muestra la fecha del último RPE y el resto del detalle
+    const toggle = function() { S.acwrOpen[x.name] = !S.acwrOpen[x.name]; card.classList.toggle('open'); card.setAttribute('aria-expanded', S.acwrOpen[x.name] ? 'true' : 'false'); };
+    card.onclick = toggle;
+    card.onkeydown = function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } };
     cards.appendChild(card);
   });
 
@@ -5372,7 +5677,7 @@ function buildSquadCharts() {
   const vd = days21;
   const sum7 = vd.slice(-7).reduce(function(a, x){ return a + x.meters; }, 0);
   const prev7 = vd.slice(-14, -7).reduce(function(a, x){ return a + x.meters; }, 0);
-  const fmt = function(n) { return Math.round(n).toLocaleString('es-ES'); };
+  const fmt = function(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); };
   const delta = prev7 > 0 ? ' (' + (sum7 >= prev7 ? '+' : '') + Math.round((sum7 / prev7 - 1) * 100) + '%)' : '';
   const hasF = vd.some(function(x){ return x.fondo !== x.meters; });
   const sum7F = vd.slice(-7).reduce(function(a, x){ return a + x.fondo; }, 0);
@@ -5402,19 +5707,32 @@ function buildSquadCharts() {
     const dt = dateObj(x.date);
     return '<text x="' + xp(i) + '" y="' + (H - 6) + '" font-size="8" fill="#3a5a7a" text-anchor="middle">' + dt.getDate() + '/' + (dt.getMonth() + 1) + '</text>';
   }).join('');
+  // Ayudas de los gráficos: al tocar un punto o barra, su valor aparece en la línea de arriba
+  const dayLbl = function(ds) { const d = dateObj(ds); return DAYS_ES[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS_ES[d.getMonth()].slice(0, 3).toLowerCase(); };
+  const letters = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+  const wireTips = function(card, readout, def) {
+    readout.innerHTML = def;
+    card.addEventListener('click', function(e) {
+      const t = e.target.closest('[data-tip]');
+      readout.innerHTML = t ? t.getAttribute('data-tip') : def;
+    });
+  };
+  const tipAttr = function(html) { return ' data-tip="' + html.replace(/"/g, '&quot;') + '"'; };
   const dotsV = vd.map(function(x, i) {
-    if (x.meters <= 0) return '<circle cx="' + pts[i].x + '" cy="' + pts[i].y + '" r="2.5" fill="#1a6fa8" opacity="0.5"><title>' + x.date + ' · 0 m</title></circle>';
-    return '<circle cx="' + pts[i].x + '" cy="' + pts[i].y + '" r="4" fill="#1a6fa8" stroke="white" stroke-width="2"><title>' + x.date + ' · ' + fmt(x.meters) + ' m</title></circle>'
-      + '<text x="' + (pts[i].x + (hasF && x.fondo > x.meters ? 13 : 0)) + '" y="' + (pts[i].y + (hasF && x.fondo > x.meters ? 4 : (((i === 0 || vd[i - 1].meters > x.meters) && (i === nPts - 1 || vd[i + 1].meters > x.meters)) ? 14 : -8))) + '" font-size="8" fill="#1a6fa8" text-anchor="middle" font-weight="700">' + (x.meters / 1000).toFixed(1) + '</text>';
+    const tip = tipAttr('<b>' + dayLbl(x.date) + '</b> · ' + (x.meters > 0 ? fmt(x.meters) + ' m' : 'sin metros') + (hasF && x.fondo !== x.meters && x.fondo > 0 ? ' · Fondo ' + fmt(x.fondo) + ' m' : ''));
+    const dot = x.meters <= 0
+      ? '<circle cx="' + pts[i].x + '" cy="' + pts[i].y + '" r="2.5" fill="#1a6fa8" opacity="0.5"/>'
+      : '<circle cx="' + pts[i].x + '" cy="' + pts[i].y + '" r="4" fill="#1a6fa8" stroke="white" stroke-width="2"/>';
+    return dot + '<circle' + tip + ' cx="' + pts[i].x + '" cy="' + pts[i].y + '" r="11" fill="transparent"/>';
   }).join('');
   // Fondo (solo si hay días con variante distinta): punto y etiqueta en dorado
   const dotsF = !hasF ? '' : vd.map(function(x, i) {
     if (x.fondo === x.meters || x.fondo <= 0) return '';
-    return '<circle cx="' + ptsF[i].x + '" cy="' + ptsF[i].y + '" r="3.5" fill="#c8920a" stroke="white" stroke-width="2"><title>' + x.date + ' · Fondo ' + fmt(x.fondo) + ' m</title></circle>'
-      + '<text x="' + ptsF[i].x + '" y="' + (ptsF[i].y + (x.fondo > x.meters ? -8 : 16)) + '" font-size="9" fill="#c8920a" text-anchor="middle" font-weight="700">' + (x.fondo / 1000).toFixed(1) + '</text>';
+    return '<circle cx="' + ptsF[i].x + '" cy="' + ptsF[i].y + '" r="3.5" fill="#c8920a" stroke="white" stroke-width="2"/>';
   }).join('');
   // Tendencia: una recta de regresión por semana (bloques de 7 días que terminan hoy); pendiente en km/día
   let trendV = '';
+  const weekSlopes = [], weekSums = [];
   for (let k = 0; k < 3; k++) {
     const i0 = k * 7, ys = [];
     for (let j = 0; j < 7; j++) ys.push(vd[i0 + j].meters / 1000);
@@ -5423,33 +5741,72 @@ function buildSquadCharts() {
     for (let j = 0; j < 7; j++) { num += (j - 3) * (ys[j] - my); den += (j - 3) * (j - 3); }
     const m = num / den, c = my - m * 3;
     const x1 = xp(i0), x2 = xp(i0 + 6), y1 = yv((c) * 1000), y2 = yv((c + m * 6) * 1000);
+    weekSlopes.push(m); weekSums.push(vd.slice(i0, i0 + 7).reduce(function(a, x){ return a + x.meters; }, 0));
     if (k < 2) trendV += '<line x1="' + ((xp(i0 + 6) + xp(i0 + 7)) / 2) + '" y1="' + (PAD.top - 4) + '" x2="' + ((xp(i0 + 6) + xp(i0 + 7)) / 2) + '" y2="' + (PAD.top + iH) + '" stroke="rgba(100,140,180,0.45)" stroke-width="0.8" stroke-dasharray="1 3"/>';
-    trendV += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#c0392b" stroke-width="2" stroke-linecap="round"><title>Semana ' + (k + 1) + ': ' + (m >= 0 ? '+' : '') + m.toFixed(2) + ' km/día</title></line>'
-      + '<text x="' + ((x1 + x2) / 2) + '" y="9" font-size="8" fill="#c0392b" text-anchor="middle" font-weight="700">' + (m > 0.05 ? '↗' : (m < -0.05 ? '↘' : '→')) + ' ' + (m >= 0 ? '+' : '') + m.toFixed(2) + ' km/día</text>';
   }
   const lineV = '<defs><linearGradient id="volGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1a6fa8" stop-opacity="0.35"/><stop offset="100%" stop-color="#1a6fa8" stop-opacity="0.03"/></linearGradient></defs>'
     + '<path d="' + curve(true) + '" fill="url(#volGrad)"/>'
     + (hasF ? '<path d="' + curve(false, ptsF) + '" fill="none" stroke="#c8920a" stroke-width="2" stroke-dasharray="5 3" stroke-linecap="round" stroke-linejoin="round"/>' : '')
     + '<path d="' + curve(false) + '" fill="none" stroke="#1a4a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'
     + trendV + dotsV + dotsF;
-  const t1 = document.createElement('div'); t1.className = 'section-title'; t1.textContent = 'Volumen · 21 días (km)';
+  const t1 = document.createElement('div'); t1.className = 'section-title'; t1.textContent = 'Volumen · 21 días';
   wrap.appendChild(t1);
-  wrap.appendChild(mkCard(grid + xLabelsV + lineV, hasF
-    ? 'Azul: Grupo · dorado discontinuo: Fondo · rojo: tendencia de cada semana. Grupo: últimos 7 días ' + fmt(sum7) + ' m · 7 días previos ' + fmt(prev7) + ' m' + delta + '. Fondo: ' + fmt(sum7F) + ' m · ' + fmt(prev7F) + ' m' + deltaF + '. Los turnos de Físico no suman metros.'
-    : 'Rojo: tendencia de cada semana. Últimos 7 días: ' + fmt(sum7) + ' m · 7 días previos: ' + fmt(prev7) + ' m' + delta + '. Los turnos de Físico no suman metros.'));
-
-  // ── Intensidad planificada ──
-  const yr = function(v) { return PAD.top + iH - ((v - 1) / 9) * iH; };
-  const gridR = [3, 5, 7, 10].map(function(v) { return '<line x1="' + PAD.left + '" y1="' + yr(v) + '" x2="' + (PAD.left + iW) + '" y2="' + yr(v) + '" stroke="rgba(100,140,180,0.18)" stroke-width="1"/><text x="' + (PAD.left - 5) + '" y="' + (yr(v) + 3) + '" font-size="9" fill="#3a5a7a" text-anchor="end">' + v + '</text>'; }).join('');
-  const barsR = days.map(function(x, i) {
-    if (x.rpe == null) return '';
-    const bx = PAD.left + bw * i + bw * 0.18, bwid = bw * 0.64, by = yr(x.rpe);
-    return '<rect x="' + bx + '" y="' + by + '" width="' + bwid + '" height="' + (PAD.top + iH - by) + '" rx="3" fill="' + rpeColor(Math.round(x.rpe)) + '"><title>' + x.date + ' · RPE objetivo ' + x.rpe + (x.n > 1 ? ' (' + x.n + ' turnos)' : '') + '</title></rect>'
-      + '<text x="' + (bx + bwid / 2) + '" y="' + (by - 3) + '" font-size="8" fill="#1a4a7a" text-anchor="middle" font-weight="700">' + x.rpe + '</text>';
+  const cV = mkCard(grid + xLabelsV + lineV, hasF
+    ? 'Azul: Grupo · dorado discontinuo: Fondo (últimos 7 días ' + fmt(sum7F) + ' m' + deltaF + '). Los turnos de Físico no suman metros.'
+    : 'Los turnos de Físico no suman metros.');
+  cV.classList.add('chart-a');
+  const roV = document.createElement('div'); roV.className = 'readout';
+  cV.insertBefore(roV, cV.firstChild);
+  const wkNames = ['Hace 2 sem.', 'Sem. pasada', 'Últimos 7 días'];
+  const chipsV = document.createElement('div'); chipsV.className = 'chips';
+  chipsV.innerHTML = wkNames.map(function(n, k) {
+    const m = weekSlopes[k];
+    const col = m > 0.05 ? 'var(--green)' : (m < -0.05 ? 'var(--orange)' : 'var(--text2)');
+    return '<div>' + n + '<b>' + (weekSums[k] / 1000).toFixed(1).replace('.', ',') + ' km</b><small style="color:' + col + '">'
+      + (m > 0.05 ? '↗' : (m < -0.05 ? '↘' : '→')) + ' ' + (m >= 0 ? '+' : '') + m.toFixed(2).replace('.', ',') + ' km/día</small></div>';
   }).join('');
+  cV.insertBefore(chipsV, cV.lastChild);
+  wireTips(cV, roV, 'Toca un punto para ver los metros de ese día');
+  wrap.appendChild(cV);
+
+  const WI = 330, leftI = 30;
+
+  // ── Intensidad planificada: barras con el color del RPE objetivo ──
+  const H2 = 120, top2 = 8, bottom2 = 100;
+  const bw2 = (WI - leftI) / days.length;
+  const yr = function(v) { return bottom2 - ((v) / 10) * (bottom2 - top2); };
+  let svgR = '';
+  [5, 10].forEach(function(v) {
+    svgR += '<line x1="' + leftI + '" x2="' + WI + '" y1="' + yr(v) + '" y2="' + yr(v) + '" stroke="rgba(74,106,134,0.16)" stroke-dasharray="3 4"/><text x="' + (leftI - 5) + '" y="' + (yr(v) + 3) + '" font-size="8" fill="#7d93a8" text-anchor="end">' + v + '</text>';
+  });
+  svgR += '<line x1="' + leftI + '" x2="' + WI + '" y1="' + bottom2 + '" y2="' + bottom2 + '" stroke="rgba(74,106,134,0.28)"/>';
+  let rSum = 0, rN = 0;
+  days.forEach(function(x, i) {
+    const bx = leftI + bw2 * i + bw2 * 0.18, bwi = bw2 * 0.64;
+    const d = dateObj(x.date);
+    svgR += '<text x="' + (bx + bwi / 2).toFixed(1) + '" y="' + (H2 - 6) + '" font-size="8" fill="#7d93a8" text-anchor="middle">' + letters[d.getDay()] + '</text>';
+    if (x.rpe == null) return;
+    rSum += x.rpe; rN++;
+    const tip = '<b>' + dayLbl(x.date) + '</b> · RPE objetivo ' + x.rpe + (x.n > 1 ? ' (' + x.n + ' turnos)' : '');
+    svgR += '<rect data-tip="' + tip.replace(/"/g, '&quot;') + '" x="' + bx.toFixed(1) + '" y="' + yr(x.rpe).toFixed(1) + '" width="' + bwi.toFixed(1) + '" height="' + (bottom2 - yr(x.rpe)).toFixed(1) + '" rx="3" fill="' + rpeColor(Math.round(x.rpe)) + '"' + (i === days.length - 1 ? ' stroke="#0b2236" stroke-width="1.2"' : '') + '/>';
+  });
   const t2 = document.createElement('div'); t2.className = 'section-title'; t2.style.marginTop = '14px'; t2.textContent = 'Intensidad planificada · 14 días';
   wrap.appendChild(t2);
-  wrap.appendChild(mkCard(gridR + xLabels + barsR, 'RPE objetivo que pones en cada sesión. En días con varios turnos, media ponderada por duración.'));
+  const cR = document.createElement('div'); cR.className = 'card chart-a';
+  const roR = document.createElement('div'); roR.className = 'readout';
+  cR.appendChild(roR);
+  const svgEl2 = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svgEl2.setAttribute('viewBox', '0 0 ' + WI + ' ' + H2); svgEl2.innerHTML = svgR;
+  cR.appendChild(svgEl2);
+  const lg = document.createElement('div'); lg.className = 'legend';
+  lg.innerHTML = '<span><i style="background:' + rpeColor(2) + '"></i>Suave 1–3</span><span><i style="background:' + rpeColor(5) + '"></i>Media 4–5</span><span><i style="background:' + rpeColor(6) + '"></i>6</span><span><i style="background:' + rpeColor(8) + '"></i>Dura 7–8</span><span><i style="background:' + rpeColor(10) + '"></i>Máx. 9–10</span>'
+    + (rN ? '<span style="margin-leftI:auto">Media: <b style="color:var(--text)">' + (rSum / rN).toFixed(1).replace('.', ',') + '</b></span>' : '');
+  cR.appendChild(lg);
+  const noteR = document.createElement('div'); noteR.className = 'note';
+  noteR.textContent = 'RPE objetivo que pones en cada sesión. En días con varios turnos, media ponderada por duración.';
+  cR.appendChild(noteR);
+  wireTips(cR, roR, 'Toca una barra para ver el RPE de ese día');
+  wrap.appendChild(cR);
   return wrap;
 }
 
@@ -7727,50 +8084,48 @@ function buildCoachInscripcions() {
   let comp = comps.find(function(c){ return c.id === S.inscCompId; }) || comps[0];
   S.inscCompId = comp.id;
   if (comps.length > 1) d.appendChild(inscCompSelector(comps, comp.id, function(id){ S.inscCompId = id; render(); }));
-  d.appendChild(inscCompCard(comp));
+  const compCardEl = inscCompCard(comp);
+  d.appendChild(compCardEl);
 
-  // Controles de override de ventana (abrir ya / cerrar ya)
+  // Un solo botón dentro de la tarjeta: abrir o cerrar ya, según el estado
   const st = inscWinStatus(comp);
-  const ctrl = document.createElement('div');
-  ctrl.className = 'insc-ctrl';
-  const openBtn = document.createElement('button');
-  openBtn.className = 'open-btn';
-  openBtn.textContent = 'Abrir inscripción';
-  openBtn.disabled = (st === 'open');
-  const closeBtn = document.createElement('button');
-  closeBtn.className = 'close-btn';
-  closeBtn.textContent = 'Cerrar inscripción';
-  closeBtn.disabled = (st !== 'open');
   const tdy = todayStr();
-  openBtn.onclick = function() {
-    showConfirm('¿Abrir la inscripción ahora?',
-      'Se abrirá hoy y se mantendrá la fecha de cierre prevista (' + (comp.inscClose ? inscFmtDate(comp.inscClose) : '—') + '). Los nadadores podrán inscribirse de inmediato.',
-      function() {
-        // abre hoy; si el cierre ya pasó o es anterior a hoy, lo empuja 5 días
-        let close = comp.inscClose;
-        if (!close || close < tdy) {
-          const c = new Date(); c.setDate(c.getDate() + 5);
-          close = c.getFullYear()+'-'+String(c.getMonth()+1).padStart(2,'0')+'-'+String(c.getDate()).padStart(2,'0');
-        }
-        dbSetInscWindow(comp.id, tdy, close).then(function() {
-          dbGetCompetitions().then(function(cs){ DATA.competitions = cs; render(); });
-        });
-      }, { okText: 'Abrir ahora', okSafe: true });
-  };
-  closeBtn.onclick = function() {
-    showConfirm('¿Cerrar la inscripción ahora?',
-      'Los nadadores ya no podrán inscribirse ni modificar sus pruebas. Podrás reabrirla manualmente si hace falta.',
-      function() {
-        // cierra ayer para que current_date > insc_close
-        const y = new Date(); y.setDate(y.getDate() - 1);
-        const yest = y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0');
-        dbSetInscWindow(comp.id, comp.inscOpen, yest).then(function() {
-          dbGetCompetitions().then(function(cs){ DATA.competitions = cs; render(); });
-        });
-      }, { okText: 'Cerrar ahora' });
-  };
-  ctrl.append(openBtn, closeBtn);
-  d.appendChild(ctrl);
+  const toggleRow = document.createElement('div'); toggleRow.className = 'insc-toggle-row';
+  const toggleBtn = document.createElement('button');
+  if (st === 'open') {
+    toggleBtn.className = 'insc-toggle close'; toggleBtn.textContent = 'Cerrar inscripción ya';
+    toggleBtn.onclick = function() {
+      showConfirm('¿Cerrar la inscripción ahora?',
+        'Los nadadores ya no podrán inscribirse ni modificar sus pruebas. Podrás reabrirla manualmente si hace falta.',
+        function() {
+          // cierra ayer para que current_date > insc_close
+          const y = new Date(); y.setDate(y.getDate() - 1);
+          const yest = y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0');
+          dbSetInscWindow(comp.id, comp.inscOpen, yest).then(function() {
+            dbGetCompetitions().then(function(cs){ DATA.competitions = cs; render(); });
+          });
+        }, { okText: 'Cerrar ahora' });
+    };
+  } else {
+    toggleBtn.className = 'insc-toggle open'; toggleBtn.textContent = 'Abrir inscripción ya';
+    toggleBtn.onclick = function() {
+      showConfirm('¿Abrir la inscripción ahora?',
+        'Se abrirá hoy y se mantendrá la fecha de cierre prevista (' + (comp.inscClose ? inscFmtDate(comp.inscClose) : '—') + '). Los nadadores podrán inscribirse de inmediato.',
+        function() {
+          // abre hoy; si el cierre ya pasó o es anterior a hoy, lo empuja 5 días
+          let close = comp.inscClose;
+          if (!close || close < tdy) {
+            const c = new Date(); c.setDate(c.getDate() + 5);
+            close = c.getFullYear()+'-'+String(c.getMonth()+1).padStart(2,'0')+'-'+String(c.getDate()).padStart(2,'0');
+          }
+          dbSetInscWindow(comp.id, tdy, close).then(function() {
+            dbGetCompetitions().then(function(cs){ DATA.competitions = cs; render(); });
+          });
+        }, { okText: 'Abrir ahora', okSafe: true });
+    };
+  }
+  toggleRow.appendChild(toggleBtn);
+  compCardEl.appendChild(toggleRow);
 
   const rows = inscForComp(comp.id);
   const athletes = DATA.athletes;
@@ -7785,6 +8140,8 @@ function buildCoachInscripcions() {
     + '<div class="insc-stat"><b>' + rows.length + '</b><span>Inscripciones</span></div>'
     + '<div class="insc-stat gold"><b>' + usedEvents + '/' + DATA.events.length + '</b><span>Pruebas cubiertas</span></div>';
   d.appendChild(stats);
+
+  d.appendChild(buildInscShareCard(comp, athletes, byAthlete, rows));
 
   // matriz
   const wrap = document.createElement('div'); wrap.className = 'insc-matrix-wrap';
@@ -7811,34 +8168,61 @@ function buildCoachInscripcions() {
   if (pending.length > 0) {
     const p = document.createElement('div');
     p.style.cssText = 'font-size:0.72rem;color:var(--text2);padding:10px 14px;border-top:1px solid rgba(41,128,185,0.12)';
-    p.innerHTML = '⚠ Pendientes: <b style="color:var(--yellow)">' + pending.map(function(a){ return escapeHtml(a.name); }).join(', ') + '</b>';
+    p.innerHTML = 'Pendientes: <b style="color:var(--yellow)">' + pending.map(function(a){ return escapeHtml(a.name); }).join(', ') + '</b>';
     wrap.appendChild(p);
   }
   d.appendChild(wrap);
 
-  // export
-  const xbtn = document.createElement('button');
-  xbtn.className = 'btn';
-  xbtn.style.cssText = 'width:100%;padding:15px;font-size:1rem;font-weight:700;border-radius:12px;border:none;background:var(--gold);color:#0a1628;cursor:pointer';
-  xbtn.textContent = '⬇ Exportar Excel (.xlsx)';
-  xbtn.onclick = function(){
-    const header = ['Nadador'].concat(DATA.events.map(function(e){ return e.code; }));
-    const body = athletes.map(function(a){
-      const evs = byAthlete[a.id] || [];
-      return [a.name].concat(DATA.events.map(function(e){ return evs.indexOf(e.code) !== -1 ? '✓' : ''; }));
-    });
-    const foot = ['TOTAL'].concat(DATA.events.map(function(e){ return rows.filter(function(i){ return i.event_code === e.code; }).length; }));
-    const ws = XLSX.utils.aoa_to_sheet([header].concat(body, [foot]));
-    // Primera columna ancha (nombres), pruebas estrechas
-    ws['!cols'] = [{wch:24}].concat(DATA.events.map(function(){ return {wch:8}; }));
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Inscripciones');
-    XLSX.writeFile(wb, 'inscripciones_' + comp.name.toLowerCase().replace(/[^a-z0-9]+/g, '_') + '.xlsx');
-    xbtn.textContent = '✓ Excel descargado';
-    setTimeout(function(){ xbtn.textContent = '⬇ Exportar Excel (.xlsx)'; }, 2000);
-  };
-  d.appendChild(xbtn);
   return d;
+}
+
+// Excel de inscripciones: una fila por nadador, una columna por prueba (✓), con año y total
+function inscBuildWorkbook(comp, athletes, byAthlete, rows) {
+  const header = ['Nadador', 'Año'].concat(DATA.events.map(function(e){ return e.code; }), ['Nº']);
+  const body = athletes.map(function(a){
+    const evs = byAthlete[a.id] || [];
+    return [a.name, a.birth_date ? Number(String(a.birth_date).slice(0, 4)) : '']
+      .concat(DATA.events.map(function(e){ return evs.indexOf(e.code) !== -1 ? '✓' : ''; }), [evs.length || '']);
+  });
+  const foot = ['TOTAL', ''].concat(DATA.events.map(function(e){ return rows.filter(function(i){ return i.event_code === e.code; }).length; }), [rows.length]);
+  const ws = XLSX.utils.aoa_to_sheet([header].concat(body, [foot]));
+  // Nombre ancho, año y pruebas estrechas
+  ws['!cols'] = [{ wch: 24 }, { wch: 6 }].concat(DATA.events.map(function(){ return { wch: 7 }; }), [{ wch: 5 }]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Inscripciones');
+  return wb;
+}
+function inscFileName(comp) {
+  return 'inscripciones_' + comp.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') + '.xlsx';
+}
+function buildInscShareCard(comp, athletes, byAthlete, rows) {
+  const card = document.createElement('div'); card.className = 'card insc-share';
+  card.innerHTML = '<div class="t">Enviar inscripciones</div><div class="s">Excel con una fila por nadador y sus pruebas marcadas</div>';
+  const row = document.createElement('div'); row.className = 'row';
+  const share = document.createElement('button'); share.className = 'share'; share.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6h14v-6"/></svg>Compartir';
+  const dl = document.createElement('button'); dl.className = 'dl'; dl.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 19h14"/></svg>Descargar';
+  const name = inscFileName(comp);
+  const download = function() {
+    XLSX.writeFile(inscBuildWorkbook(comp, athletes, byAthlete, rows), name);
+    dl.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 19h14"/></svg>Descargado';
+    setTimeout(function(){ dl.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 19h14"/></svg>Descargar'; }, 2000);
+  };
+  dl.onclick = download;
+  share.onclick = function() {
+    // Menú de compartir del teléfono (WhatsApp, Mail, Archivos…) con el Excel adjunto; si no se puede, se descarga
+    try {
+      const data = XLSX.write(inscBuildWorkbook(comp, athletes, byAthlete, rows), { bookType: 'xlsx', type: 'array' });
+      const file = new File([data], name, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: 'Inscripciones · ' + comp.name }).catch(function(){});
+        return;
+      }
+    } catch (e) { console.error('compartir excel', e); }
+    download();
+  };
+  row.append(share, dl);
+  card.appendChild(row);
+  return card;
 }
 
 
