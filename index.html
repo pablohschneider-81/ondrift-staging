@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
-<title>Ondrift STAGING v2.3</title>
+<title>Ondrift STAGING v2.4</title>
 <style>
   :root {
     --bg: #cfdbe9;
@@ -1028,6 +1028,7 @@
   .rpe-nm { flex: 1; min-width: 0; font-size: 0.9rem; font-weight: 600; color: var(--text); }
   .rpe-nm small { display: block; font-size: 0.72rem; font-weight: 500; color: var(--text2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rpe-nm small.pending { font-style: italic; }
+  .rpe-nm small.rpe-note { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
   .rpe-cdot { display: inline-flex; vertical-align: -2px; margin-left: 6px; color: var(--accent); }
   .rpe-row .delta { width: 26px; text-align: right; font-size: 0.82rem; font-weight: 700; }
   .rpe-more { all: unset; box-sizing: border-box; width: 36px; height: 36px; flex: none; display: flex; align-items: center; justify-content: center; border-radius: 11px; color: var(--text2); background: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.95); box-shadow: var(--glass-shadow-sm); cursor: pointer; }
@@ -1947,13 +1948,24 @@ async function dbLoadSessionMonth(ym) {
 }
 
 // ── RPE ────────────────────────────────────────────────────
+// PostgREST devuelve como máximo 1000 filas por petición: pedimos por páginas hasta traerlo todo.
+async function sbFetchAll(path) {
+  const PAGE = 1000; let all = [];
+  for (let i = 0; i < 50; i++) {
+    const rows = await sbFetch(path + '&limit=' + PAGE + '&offset=' + (i * PAGE));
+    if (!rows) return all.length ? all : null;
+    all = all.concat(rows);
+    if (rows.length < PAGE) break;
+  }
+  return all;
+}
 let _rpeCache = {};
 let _rpeRangeLoaded = false;
 async function dbGetRPERange(days) {
   // 1 sola petición para los últimos N días, agrupada por fecha en cliente
   const from = new Date(); from.setDate(from.getDate() - (days - 1));
   const fromS = from.getFullYear()+'-'+String(from.getMonth()+1).padStart(2,'0')+'-'+String(from.getDate()).padStart(2,'0');
-  const rows = await sbFetch('rpe_entries?date=gte.' + fromS + '&select=*,athletes(name)&order=date');
+  const rows = await sbFetchAll('rpe_entries?date=gte.' + fromS + '&select=*,athletes(name)&order=date,id');
   const byDate = {};
   (rows || []).forEach(r => {
     const name = r.athletes?.name;
@@ -2212,7 +2224,7 @@ async function dbGetAllAthleteHist() {
   await ensureSessionsLoaded();
   const from = new Date(); from.setDate(from.getDate() - 27);
   const fromS = from.getFullYear()+'-'+String(from.getMonth()+1).padStart(2,'0')+'-'+String(from.getDate()).padStart(2,'0');
-  const rows = await sbFetch('rpe_entries?select=date,slot,rpe,fatigue,athletes(name)&date=gte.' + fromS + '&order=date.asc');
+  const rows = await sbFetchAll('rpe_entries?select=date,slot,rpe,fatigue,athletes(name)&date=gte.' + fromS + '&order=date.asc,id.asc');
   const map = {};
   if (!rows) return map;
   rows.forEach(function(r) {
@@ -4639,7 +4651,7 @@ function latestChangelogV() {
 // lee y los muestra (no puede cambiar el plan ni deshacer la mayoría de edad).
 // ============================================================
 // Versión de la app: subir el número en cada cambio (2.0 = archivo de producción del 26-oct-2026)
-const APP_VERSION = '2.3';
+const APP_VERSION = '2.4';
 const PLAN_URL = 'https://ondrift.app/#precio';
 const LEGAL_TERMS_URL = 'https://ondrift.app/terminos-ondrift.html';
 const LEGAL_PRIVACY_URL = 'https://ondrift.app/privacidad-datos.html';
@@ -5204,10 +5216,10 @@ function buildCoachRPE() {
       const delta = deltaCount > 0 ? Math.round(deltaSum / deltaCount) : 0;
       const deltaStr = deltaCount > 0 ? (delta > 0 ? '+' + delta : delta < 0 ? '' + delta : '=') : '';
       const dClass = deltaCount > 0 ? deltaClass(delta) : '';
-      const note = lastSub.note ? ' · “' + escapeHtml(lastSub.note) + '”' : '';
+      const note = lastSub.note ? '<small class="rpe-note">“' + escapeHtml(lastSub.note) + '”</small>' : '';
       answeredRows.push('<div class="rpe-row"><div class="rpe-circles">' + circles + '</div>' +
         '<div class="rpe-nm">' + escapeHtml(name) + cdot + '<small><span style="color:' + fat.color + ';font-weight:600">' + fat.label + '</span>' +
-        (targetLbl ? ' · objetivo ' + targetLbl : '') + note + '</small></div>' +
+        (targetLbl ? ' · objetivo ' + targetLbl : '') + '</small>' + note + '</div>' +
         '<span class="delta ' + dClass + '">' + deltaStr + '</span>' + moreBtn + '</div>');
     } else {
       pendingRows.push('<div class="rpe-row"><div class="rpe-circles"><span class="rpe-circle rpe-empty">–</span></div>' +
@@ -5613,7 +5625,7 @@ function buildLactateModal() {
 async function dbGetTeamWellness(days) {
   const from = new Date(); from.setDate(from.getDate() - (days - 1));
   const fromS = from.getFullYear()+'-'+String(from.getMonth()+1).padStart(2,'0')+'-'+String(from.getDate()).padStart(2,'0');
-  const rows = await sbFetch('wellness_entries?select=date,sleep,soreness,fatigue,stress,athletes(name)&date=gte.' + fromS + '&order=date.asc');
+  const rows = await sbFetchAll('wellness_entries?select=date,sleep,soreness,fatigue,stress,athletes(name)&date=gte.' + fromS + '&order=date.asc,id.asc');
   const map = {};
   (rows || []).forEach(function(r) {
     const name = r.athletes && r.athletes.name;
