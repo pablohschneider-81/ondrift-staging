@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
-<title>Ondrift STAGING v2.1</title>
+<title>Ondrift STAGING v2.3</title>
 <style>
   :root {
     --bg: #cfdbe9;
@@ -4639,7 +4639,7 @@ function latestChangelogV() {
 // lee y los muestra (no puede cambiar el plan ni deshacer la mayoría de edad).
 // ============================================================
 // Versión de la app: subir el número en cada cambio (2.0 = archivo de producción del 26-oct-2026)
-const APP_VERSION = '2.1';
+const APP_VERSION = '2.3';
 const PLAN_URL = 'https://ondrift.app/#precio';
 const LEGAL_TERMS_URL = 'https://ondrift.app/terminos-ondrift.html';
 const LEGAL_PRIVACY_URL = 'https://ondrift.app/privacidad-datos.html';
@@ -4823,13 +4823,13 @@ function buildBottomNav() {
   if (S.role === 'coach') {
     // Índices de S.tab: 0 Sesión · 1 RPE · 2 Escuadra · 3 Calendario · 4 Inscripciones · 5 Equipo · 6 Historial · 7 Asistencia
     const go = function(i) { return function() { S.tab = i; S.navMore = false; S.rpeMenuAthlete = null; S.bwDetail = null; render(); }; };
-    const MORE = [{ tab: 4, icon: 'inscr', label: 'Inscripciones' }, { tab: 6, icon: 'historial', label: 'Historial' }, { tab: 7, icon: 'asistencia', label: 'Asistencia' }];
+    const MORE = [{ tab: 3, icon: 'calend', label: 'Calendario' }, { tab: 4, icon: 'inscr', label: 'Inscripciones' }, { tab: 5, icon: 'equipo', label: 'Equipo' }];
     const inMore = MORE.some(function(m) { return m.tab === S.tab; });
     nav.appendChild(mk('sesion', 'Sesión', S.tab === 0, go(0)));
     nav.appendChild(mk('rpe', 'Carga', S.tab === 1 || S.tab === 2, go(S.lastCargaTab || 1)));
-    nav.appendChild(mk('calend', 'Calendario', S.tab === 3, go(3)));
-    nav.appendChild(mk('equipo', 'Equipo', S.tab === 5, go(5), S.isAdmin && S.pendingCoachCount > 0));
-    nav.appendChild(mk('mas', 'Más', inMore || S.navMore, function() { S.navMore = !S.navMore; render(); }));
+    nav.appendChild(mk('historial', 'Historial', S.tab === 6, go(6)));
+    nav.appendChild(mk('asistencia', 'Asistencia', S.tab === 7, go(7)));
+    nav.appendChild(mk('mas', 'Más', inMore || S.navMore, function() { S.navMore = !S.navMore; render(); }, S.isAdmin && S.pendingCoachCount > 0));
     if (S.navMore) {
       const wrap = document.createElement('div');
       const back = document.createElement('div'); back.className = 'nav-more-back';
