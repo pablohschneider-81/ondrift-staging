@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
-<title>Ondrift STAGING v2.4</title>
+<title>Ondrift STAGING v2.7</title>
 <style>
   :root {
     --bg: #cfdbe9;
@@ -1509,6 +1509,7 @@ let SB_LAST_ERROR = ''; // texto del último error devuelto por PostgREST
 let SB_ACCESS_TOKEN = null; // no restauramos token viejo al arrancar: caducaría y daría un 401 falso ("clave revocada"). El coach re-loguea por sesión.
 let SB_REFRESH_TOKEN = null; // el nadador sí: su refresh_token permite renovar el access_token caducado sin volver a pedir el PIN.
 let LAST_AUTH_ERROR = null; // 'confirm' | 'creds' | 'locked' | 'offline' | 'busy'
+let LAST_AUTH_MSG = null;   // texto del servidor cuando la cuenta está bloqueada
 let COACH_CREDS = null; // {email,password} SOLO en memoria durante la sesion; nunca se guarda en disco ni se hardcodea
 
 // Tras iniciar sesión: mira el estado real del coach (pending/approved) y quién es admin.
@@ -1564,7 +1565,11 @@ async function coachSignIn(email, password) {
     });
     if (!res.ok) {
       const t = await res.text(); console.error('Coach auth error', t);
-      if (res.status === 423) { LAST_AUTH_ERROR = 'locked'; return false; }
+      if (res.status === 423) {
+        LAST_AUTH_ERROR = 'locked';
+        try { LAST_AUTH_MSG = (JSON.parse(t) || {}).error || null; } catch (e) { LAST_AUTH_MSG = null; }
+        return false;
+      }
       if (res.status === 429 || res.status >= 500) { LAST_AUTH_ERROR = 'busy'; return false; }
       LAST_AUTH_ERROR = (t && t.indexOf('not confirmed') !== -1) ? 'confirm' : 'creds';
       return false;
@@ -2728,6 +2733,8 @@ function resetSession() {
   COACH_CREDS = null;
   try { localStorage.removeItem('ondrift_sb_token'); } catch (e) {}
   try { localStorage.removeItem('ondrift_sb_refresh'); } catch (e) {}
+  try { localStorage.removeItem('ondrift_athlete'); } catch (e) {}
+  S.rememberedAthlete = null;
   // Caché de datos
   DATA.athletes = []; DATA.sessions = {}; DATA.allSessions = [];
   DATA.rpe = {}; DATA.comments = {}; DATA.competitions = []; DATA.events = [];
@@ -3552,6 +3559,13 @@ function buildAthleteStrength() {
       + '</div>';
     card.appendChild(head);
 
+    // ejercicios con peso corporal (Pull-up): se registra SOLO el lastre
+    if (ex.uses_bodyweight) {
+      const bwHint = document.createElement('div');
+      bwHint.style.cssText = 'font-size:0.78rem;color:var(--text2);margin-bottom:12px';
+      bwHint.textContent = 'Pon solo el lastre que añades, sin tu peso corporal. Sin lastre: 0.';
+      card.appendChild(bwHint);
+    }
     // nota del coach para esta categoría (Pull/Push/Lower Body) — si escribió algo
     if (noteTxt) {
       const note = document.createElement('div');
@@ -3562,7 +3576,7 @@ function buildAthleteStrength() {
 
     // inputs carga / reps / rir
     const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:10px;margin-bottom:10px';
-    [['load', 'Carga', 'kg'], ['reps', 'Reps', ''], ['rir', 'RIR', '']].forEach(function (f) {
+    [['load', ex.uses_bodyweight ? 'Lastre' : 'Carga', 'kg'], ['reps', 'Reps', ''], ['rir', 'RIR', '']].forEach(function (f) {
       const wrap = document.createElement('div'); wrap.style.flex = '1';
       const lbl = document.createElement('div'); lbl.className = 'field-label'; lbl.textContent = f[1] + (f[2] ? ' (' + f[2] + ')' : '');
       const inp = document.createElement('input'); inp.type = 'number'; inp.inputMode = 'decimal';
@@ -3572,6 +3586,18 @@ function buildAthleteStrength() {
     });
     card.appendChild(row);
 
+    // por qué una serie guardada puede no contar para el 1RM
+    if (saved) {
+      let why = '';
+      if (saved.rir !== 0) why = 'Esta serie no cuenta para tu 1RM: solo cuentan las series con RIR 0.';
+      else if (ex.uses_bodyweight && lastRm == null) why = 'Falta tu peso corporal para calcular el 1RM: pídeselo a tu entrenador.';
+      if (why) {
+        const whyEl = document.createElement('div');
+        whyEl.style.cssText = 'font-size:0.78rem;color:var(--text2);margin-bottom:10px';
+        whyEl.textContent = why;
+        card.appendChild(whyEl);
+      }
+    }
     // tendencia
     if (trend.length >= 2) {
       const sp = document.createElement('div'); sp.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:10px';
@@ -3585,6 +3611,7 @@ function buildAthleteStrength() {
     btn.onclick = function () {
       const v = S.strInput[ex.id];
       if (v.load === '' || v.reps === '') { alert('Pon al menos carga y reps'); return; }
+      if (ex.uses_bodyweight && Number(v.load) > 25 && !confirm('Pon solo el lastre que añades, sin tu peso corporal. ¿Seguro que añades ' + v.load + ' kg?')) return;
       btn.disabled = true; btn.textContent = 'Guardando…';
       dbSaveStrengthSet(S.athleteName, ex.id, Number(v.load), Number(v.reps), v.rir === '' ? null : Number(v.rir), sessionId)
         .then(function (res) {
@@ -3818,6 +3845,7 @@ function buildLogin() {
     const o = document.createElement('option');
     o.value = name; o.textContent = name; sel.appendChild(o);
   });
+  if (S.rememberedAthlete && getAthletes().indexOf(S.rememberedAthlete.name) !== -1) sel.value = S.rememberedAthlete.name;
   card.appendChild(sel);
 
   const btnAth = document.createElement('button');
@@ -4003,7 +4031,7 @@ function buildPin() {
     err.textContent = (LAST_AUTH_ERROR === 'confirm')
       ? 'Tienes que confirmar tu email antes de entrar. Busca el correo de confirmaci\u00f3n en tu bandeja (y en spam).'
       : (LAST_AUTH_ERROR === 'locked')
-      ? 'Cuenta bloqueada por intentos fallidos. Ped\u00ed a tu entrenador/admin que la reactive.'
+      ? (LAST_AUTH_MSG || 'Demasiados intentos fallidos. Int\u00e9ntalo de nuevo en unos minutos.')
       : (LAST_AUTH_ERROR === 'offline')
       ? 'Sin conexi\u00f3n. Revisa tu internet e int\u00e9ntalo de nuevo.'
       : (LAST_AUTH_ERROR === 'busy')
@@ -4281,6 +4309,7 @@ function buildAthletePin() {
               }
               S.role = 'athlete';
               S.athleteName = S.pendingAthleteName;
+              try { localStorage.setItem('ondrift_athlete', JSON.stringify({ id: S.pendingAthleteId, name: S.pendingAthleteName, team: getTeamCode() })); } catch (e) {}
               S.ath_tab = 0;
               S.athletePinBuffer = '';
               // renderAsync (no render): hay que ejecutar loadData() ahora que
@@ -4651,7 +4680,7 @@ function latestChangelogV() {
 // lee y los muestra (no puede cambiar el plan ni deshacer la mayoría de edad).
 // ============================================================
 // Versión de la app: subir el número en cada cambio (2.0 = archivo de producción del 26-oct-2026)
-const APP_VERSION = '2.4';
+const APP_VERSION = '2.7';
 const PLAN_URL = 'https://ondrift.app/#precio';
 const LEGAL_TERMS_URL = 'https://ondrift.app/terminos-ondrift.html';
 const LEGAL_PRIVACY_URL = 'https://ondrift.app/privacidad-datos.html';
@@ -8734,9 +8763,33 @@ seedDemoData();
   }, true);
 })();
 
+// Recupera la sesión del nadador (token de renovación + quién es). Si no se puede, queda su nombre
+// preseleccionado y solo falta el PIN.
+async function restoreAthleteSession() {
+  if (S.role) return;
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('ondrift_athlete') || 'null'); } catch (e) {}
+  if (!saved || !saved.id || !saved.name) return;
+  const tc = getTeamCode();
+  if (!tc || (saved.team && saved.team !== tc)) return;
+  S.rememberedAthlete = saved;
+  if (await refreshAthleteSession()) {
+    S.role = 'athlete'; S.athleteName = saved.name; S.ath_tab = 0;
+    track('athlete_session_restored', {});
+  }
+}
 checkGoogleRedirect();
 track('session_start', {});
-renderAsync();
+// Con el código ya guardado, la lista de nombres NO se cargaba al abrir la app (loadData no pide nada sin rol):
+// el desplegable salía vacío y había que pulsar 'Cambiar de equipo' y volver a meter el código.
+async function loadRosterForLogin() {
+  if (S.role || !getTeamCode() || (DATA.athletes && DATA.athletes.length)) return;
+  DATA.athletes = await dbGetAthletes();
+}
+showLoading();
+restoreAthleteSession().catch(function () {})
+  .then(function () { return loadRosterForLogin(); }).catch(function () {})
+  .then(function () { renderAsync(); });
 </script>
 </body>
 </html>
