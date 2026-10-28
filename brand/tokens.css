@@ -1,0 +1,12 @@
+/* Ondrift · paleta W4 (pizarra azul + miel) */
+:root {
+  --od-ink:        #1b2b3e; /* marca: logo, botón primario y acento de la UI */
+  --od-ink-dark:   #0f1a28; /* fondo oscuro de marca */
+  --od-mist:       #eef1f5; /* fondo claro de marca */
+  --od-mist-ink:   #eef2f7; /* logo sobre fondo oscuro */
+  --od-honey:      #9c6f22; /* estela sobre fondo claro (3,9:1) */
+  --od-honey-lit:  #d4a24c; /* estela sobre fondo oscuro e icono (7,6:1) */
+}
+/* La miel solo se usa en el logo, el icono y el marketing.
+   Dentro de la app el acento es --od-ink; los estados siguen siendo
+   --green #1e8449 / --yellow #b7770d / --red #c0392b. */
