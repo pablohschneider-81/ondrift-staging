@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
-<title>Ondrift STAGING v3.3</title>
+<title>Ondrift STAGING v3.5</title>
 <style>
   :root {
     --bg: #cfdbe9;
@@ -1005,6 +1005,27 @@
     border: 1px solid rgba(255,255,255,0.95); box-shadow: 0 18px 40px -14px rgba(20,60,100,0.45);
     transform-origin: 85% 100%; animation: popIn 0.18s ease-out;
   }
+  .btn-refresh { display: inline-flex; align-items: center; justify-content: center; padding: 7px 9px; }
+  .btn-refresh.spinning svg { animation: odSpin .8s linear infinite; }
+  @keyframes odSpin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .btn-refresh.spinning svg { animation: none; opacity: .5; } }
+  .help-art { margin-bottom: 10px; padding: 0; overflow: hidden; }
+  .help-art > summary { list-style: none; cursor: pointer; padding: 16px 18px; font-weight: 700; color: var(--text); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .help-art > summary::-webkit-details-marker { display: none; }
+  .help-art > summary::after { content: '›'; font-size: 1.3rem; color: var(--text3); transition: transform .2s ease; }
+  .help-art[open] > summary::after { transform: rotate(90deg); }
+  .help-body { padding: 0 18px 16px; font-size: 0.88rem; line-height: 1.5; color: var(--text2); }
+  .help-body h4 { margin: 16px 0 6px; font-size: 0.95rem; color: var(--text); }
+  .help-body p { margin: 0 0 10px; }
+  .help-body ul, .help-body ol { margin: 0 0 10px; padding-left: 20px; }
+  .help-body li { margin-bottom: 4px; }
+  .help-body strong { color: var(--text); }
+  .help-body code { font-family: monospace; font-size: 0.82rem; background: rgba(100,150,190,0.12); padding: 1px 5px; border-radius: 5px; word-break: break-word; }
+  .help-table { overflow-x: auto; margin: 0 0 12px; }
+  .help-table table { border-collapse: collapse; width: 100%; font-size: 0.8rem; }
+  .help-table th, .help-table td { text-align: left; vertical-align: top; padding: 6px 8px; border-bottom: 1px solid rgba(100,150,190,0.18); }
+  .help-table th { color: var(--text); font-weight: 700; }
+  @media (prefers-reduced-motion: reduce) { .help-art > summary::after { transition: none; } }
   .nav-more-item { all: unset; display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; font-size: 0.92rem; font-weight: 500; color: var(--text); cursor: pointer; }
   .nav-more-item svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; color: var(--text2); }
   .nav-more-item.active { background: rgba(10,132,255,0.12); color: var(--accent); }
@@ -2972,9 +2993,84 @@ async function loadData() {
   if (getRPEQueue().length > 0) flushRPEQueue(); // no bloquea el render; corre en paralelo
 }
 
+// ============================================================
+// REFRESCO: al volver a la app (tras >2 min fuera o si cambió el día) se vacían
+// las cachés de datos y se recarga en silencio, sin tocar la sesión ni lo que
+// el usuario tenga a medio escribir (todo eso vive en S, no en las cachés).
+// ============================================================
+const REFRESH_AFTER_MS = 2 * 60 * 1000;
+let _hiddenAt = null, _loadedDay = null, _refreshing = false;
+function invalidateDataCaches() {
+  DATA.athletes = []; DATA.rpe = {}; DATA.comments = {};
+  DATA.athleteHist = {}; DATA.allHistLoaded = false; DATA.teamWellHist = undefined;
+  DATA.wellness = {}; DATA.athleteWellHist = {}; DATA.pendingSurvey = {};
+  DATA.attendanceSum = null; _attendanceSumCache = null;
+  DATA.attendancePct = null; _attendancePctCache = null;
+  DATA.strengthEx = undefined; DATA.coachStrAthletes = undefined;
+  DATA.coachStrLatest = undefined; DATA.coachStrBw = undefined; DATA.athStrTrend = undefined;
+  DATA.lactateHistByAthlete = undefined; DATA.athleteLactate = undefined;
+  _athleteCache = null; _sessionCache = {}; _allSessionsCache = null; _loadedMonths = {};
+  _rpeCache = {}; _rpeRangeLoaded = false; _wellCache = {};
+  _compCache = null; _eventsCache = null; _inscCache = null; _commentCache = null;
+  S._cstrLoading = false; S._strLoading = false; S._gym72Loading = false; S._gym72Failed = false;
+}
+function userIsTyping() {
+  const el = document.activeElement;
+  return !!(el && (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && !/^(button|checkbox|radio|submit)$/i.test(el.type)) || el.isContentEditable));
+}
+async function refreshData(opts) {
+  opts = opts || {};
+  if (_refreshing || !S.role || S.role === 'pin' || S.role === 'athlete_pin' || S.role === 'coach_pending') return false;
+  if (!opts.force && userIsTyping()) return false;   // no borrar lo que está escribiendo
+  _refreshing = true;
+  try {
+    invalidateDataCaches();
+    await loadData();
+    _loadedDay = todayStr();
+    render();
+    if (opts.toast) showToast('✓ Datos actualizados', 'success');
+    return true;
+  } catch (e) { console.error('refresco falló', e); return false; }
+  finally { _refreshing = false; }
+}
+// ¿Hay una versión nueva publicada? Lee app/version.txt (5 bytes, sin caché).
+async function checkNewVersion() {
+  try {
+    const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return;
+    const v = (await r.text()).trim();
+    if (/^\d+(\.\d+)*$/.test(v) && v !== APP_VERSION && parseFloat(v) > parseFloat(APP_VERSION)) {
+      if (S.newVersion !== v) { S.newVersion = v; render(); }
+    }
+  } catch (e) {}
+}
+function onAppResume() {
+  const away = _hiddenAt ? Date.now() - _hiddenAt : 0;
+  _hiddenAt = null;
+  checkNewVersion();
+  if (away >= REFRESH_AFTER_MS || (_loadedDay && _loadedDay !== todayStr())) refreshData();
+}
+document.addEventListener('visibilitychange', function () {
+  if (document.visibilityState === 'hidden') _hiddenAt = Date.now();
+  else onAppResume();
+});
+// iOS puede devolver la página desde su caché (bfcache) sin visibilitychange
+window.addEventListener('pageshow', function (e) { if (e.persisted) { _hiddenAt = _hiddenAt || 0; onAppResume(); } });
+function buildNewVersionBanner() {
+  if (!S.newVersion) return null;
+  const b = document.createElement('div'); b.className = 'card'; b.setAttribute('role', 'status');
+  b.style.cssText = 'margin:0 16px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px';
+  b.innerHTML = '<div style="font-size:0.85rem;color:var(--text)"><b>Hay una versión nueva</b> de Ondrift</div>';
+  const go = document.createElement('button'); go.className = 'btn btn-primary'; go.textContent = 'Actualizar';
+  go.style.cssText = 'width:auto;padding:8px 16px;flex-shrink:0';
+  go.onclick = function () { location.reload(); };
+  b.appendChild(go);
+  return b;
+}
+
 async function renderAsync() {
   showLoading();
-  try { await loadData(); }
+  try { await loadData(); _loadedDay = todayStr(); }
   catch (e) { console.error('loadData falló', e); }
   render();
 }
@@ -3870,6 +3966,8 @@ function render() {
   app.appendChild(buildHeader());
   const planBanner = buildPlanBanner();
   if (planBanner) app.appendChild(planBanner);
+  const nvBanner = buildNewVersionBanner();
+  if (nvBanner) app.appendChild(nvBanner);
   if (S.showChangelog) app.appendChild(buildChangelogPanel());
   if (S.role === 'coach' && (S.showProfile || (S.coachProfile && !S.coachProfile.adult_confirmed_at && !S.profileSkipped))) app.appendChild(buildProfileSheet());
   const content = document.createElement('div');
@@ -3877,7 +3975,7 @@ function render() {
 
   if (S.role === 'coach') {
     // La navegación vive solo en el menú inferior; aquí ya no se pinta la fila de tabs.
-    const views = [buildCoachSession, buildCoachRPE, buildCoachSquad, buildCalendar, buildCoachInscripcions, buildCoachTeam, buildCoachHistorial, buildCoachAttendance];
+    const views = [buildCoachSession, buildCoachRPE, buildCoachSquad, buildCalendar, buildCoachInscripcions, buildCoachTeam, buildCoachHistorial, buildCoachAttendance, buildCoachHelp];
     const view = views[S.tab];
     trackScreen(view.name);
     if (S.tab === 1 || S.tab === 2) {
@@ -4800,6 +4898,14 @@ async function openCoachAdminModal() {
 // Cada dispositivo recuerda en localStorage cuál fue la última que vio.
 // ============================================================
 const CHANGELOG = [
+  { v: 24, date: '2026-11-13', text: '<div class="nt">La app se actualiza sola</div><ul>'
+    + '<li>Al volver a la app después de un rato, los datos se <b>actualizan solos</b>: ya no hace falta cerrarla y abrirla.</li>'
+    + '<li>Si estás escribiendo algo, espera a que termines para no borrártelo.</li>'
+    + '<li>Arriba tienes el botón <b>↻</b> para actualizar cuando quieras.</li>'
+    + '<li>Cuando haya una versión nueva te aparecerá <b>Actualizar</b>.</li></ul>' },
+  { v: 22, date: '2026-11-12', role: 'coach', text: '<div class="nt">Manual en Más &gt; Ayuda</div><ul>'
+    + '<li>El <b>manual del entrenador</b> ahora está dentro de la app, con <b>buscador</b>.</li>'
+    + '<li>Abajo tienes <b>Escribir a soporte</b> (soporte@ondrift.app).</li></ul>' },
   { v: 21, date: '2026-11-11', role: 'coach', text: '<div class="nt">Fuerza: sugerencia de las últimas 72 h</div><ul>'
     + '<li>Cada nadador tiene un <b>punto de color</b> con una sugerencia para el gimnasio de hoy.</li>'
     + '<li><b>Rojo · Bajar la carga</b>: RPE 2 puntos o más por encima del objetivo 2 de 3 días y, además, bienestar por debajo de 12/20 o cansado 2 de 3 días.</li>'
@@ -4899,6 +5005,17 @@ function buildHeader() {
     right.appendChild(newsBtn);
   }
 
+  const rf = document.createElement('button');
+  rf.className = 'btn-exit btn-refresh'; rf.setAttribute('aria-label', 'Actualizar datos'); rf.title = 'Actualizar datos';
+  rf.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>';
+  rf.onclick = function () {
+    if (rf.classList.contains('spinning')) return;
+    rf.classList.add('spinning');
+    checkNewVersion();
+    refreshData({ force: true, toast: true }).then(function (ok) { rf.classList.remove('spinning'); if (!ok) showToast('No se pudo actualizar. Revisa la conexión', 'error'); });
+  };
+  right.appendChild(rf);
+
   const btn = document.createElement('button');
   btn.className = 'btn-exit'; btn.textContent = 'Salir';
   btn.onclick = () => { resetSession(); render(); };
@@ -4923,7 +5040,7 @@ function latestChangelogV() {
 // lee y los muestra (no puede cambiar el plan ni deshacer la mayoría de edad).
 // ============================================================
 // Versión de la app: subir el número en cada cambio (2.0 = archivo de producción del 26-oct-2026)
-const APP_VERSION = '3.3';
+const APP_VERSION = '3.5';
 const PLAN_URL = 'https://ondrift.app/?landing#precio';
 const LEGAL_TERMS_URL = 'https://ondrift.app/terminos';
 const LEGAL_PRIVACY_URL = 'https://ondrift.app/privacidad';
@@ -5160,6 +5277,7 @@ const NAV_ICONS = {
   escuadra: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/>',
   historial: '<path d="M3 7l2-3h14l2 3"/><path d="M3 7v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7"/><path d="M3 7h18"/><path d="M10 11h4"/>',
   asistencia: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 10.5l2.5 2.5L16 8"/>',
+  ayuda: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.6"/><circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none"/>',
   inicio: '<path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/>',
   mirpe: '<path d="M6.5 16.5 3 13l2-2 3.5 3.5"/><path d="M17.5 7.5 21 11l-2 2-3.5-3.5"/><path d="M9 15l6-6"/><path d="M5 9l2-2M17 19l2-2"/>',
   fuerza: '<path d="M6.5 6.5v11M17.5 6.5v11M4 9v6M20 9v6M6.5 12h11"/>',
@@ -5177,9 +5295,9 @@ function buildBottomNav() {
     return btn;
   };
   if (S.role === 'coach') {
-    // Índices de S.tab: 0 Sesión · 1 RPE · 2 Escuadra · 3 Calendario · 4 Inscripciones · 5 Equipo · 6 Historial · 7 Asistencia
+    // Índices de S.tab: 0 Sesión · 1 RPE · 2 Escuadra · 3 Calendario · 4 Inscripciones · 5 Equipo · 6 Historial · 7 Asistencia · 8 Ayuda
     const go = function(i) { return function() { S.tab = i; S.navMore = false; S.rpeMenuAthlete = null; S.bwDetail = null; render(); }; };
-    const MORE = [{ tab: 3, icon: 'calend', label: 'Calendario' }, { tab: 4, icon: 'inscr', label: 'Inscripciones' }, { tab: 5, icon: 'equipo', label: 'Equipo' }];
+    const MORE = [{ tab: 3, icon: 'calend', label: 'Calendario' }, { tab: 4, icon: 'inscr', label: 'Inscripciones' }, { tab: 5, icon: 'equipo', label: 'Equipo' }, { tab: 8, icon: 'ayuda', label: 'Ayuda' }];
     const inMore = MORE.some(function(m) { return m.tab === S.tab; });
     nav.appendChild(mk('sesion', 'Sesión', S.tab === 0, go(0)));
     nav.appendChild(mk('rpe', 'Carga', S.tab === 1 || S.tab === 2, go(S.lastCargaTab || 1)));
@@ -6919,6 +7037,100 @@ function buildTeamCoachesTab() {
     d.appendChild(adminCard);
   }
 
+  return d;
+}
+
+// ============================================================
+// AYUDA (manual del entrenador): el texto vive en Supabase (help_articles) y se
+// edita en ayuda/entrenador.md + ayuda/sync.py, sin publicar la app.
+// ============================================================
+function helpMdInline(t) {
+  return escapeHtml(t)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>');
+}
+function helpMdToHtml(md) {
+  const lines = String(md || '').split('\n');
+  let html = '', i = 0;
+  while (i < lines.length) {
+    const l = lines[i];
+    if (!l.trim()) { i++; continue; }
+    let m;
+    if ((m = l.match(/^###\s+(.*)$/))) { html += '<h4>' + helpMdInline(m[1]) + '</h4>'; i++; continue; }
+    if (/^\|/.test(l)) {
+      const rows = []; while (i < lines.length && /^\|/.test(lines[i])) { rows.push(lines[i]); i++; }
+      const cells = function (r) { return r.replace(/^\||\|$/g, '').split('|').map(function (c) { return c.trim(); }); };
+      html += '<div class="help-table"><table><thead><tr>' + cells(rows[0]).map(function (c) { return '<th>' + helpMdInline(c) + '</th>'; }).join('') + '</tr></thead><tbody>';
+      rows.slice(2).forEach(function (r) { html += '<tr>' + cells(r).map(function (c) { return '<td>' + helpMdInline(c) + '</td>'; }).join('') + '</tr>'; });
+      html += '</tbody></table></div>'; continue;
+    }
+    if (/^(- |\d+\. )/.test(l)) {
+      const ordered = /^\d+\. /.test(l); const items = [];
+      while (i < lines.length && (ordered ? /^\d+\. /.test(lines[i]) : /^- /.test(lines[i]))) { items.push(lines[i].replace(/^(- |\d+\. )/, '')); i++; }
+      html += (ordered ? '<ol>' : '<ul>') + items.map(function (x) { return '<li>' + helpMdInline(x) + '</li>'; }).join('') + (ordered ? '</ol>' : '</ul>'); continue;
+    }
+    const para = []; while (i < lines.length && lines[i].trim() && !/^(###|\||- |\d+\. )/.test(lines[i])) { para.push(lines[i]); i++; }
+    html += '<p>' + helpMdInline(para.join(' ')) + '</p>';
+  }
+  return html;
+}
+function helpNorm(t) { return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
+
+function buildCoachHelp() {
+  const d = document.createElement('div');
+  const st = document.createElement('div'); st.className = 'section-title'; st.textContent = 'Ayuda'; d.appendChild(st);
+
+  if (DATA.help === undefined) {
+    if (!S._helpLoading) {
+      S._helpLoading = true;
+      sbFetch('help_articles?select=slug,position,title,body_md,updated_at&role=eq.coach&order=position.asc').then(function (rows) {
+        S._helpLoading = false; DATA.help = rows || null; render();
+      });
+    }
+    d.insertAdjacentHTML('beforeend', '<div class="card"><div class="card-sub" style="text-align:center">Cargando el manual…</div></div>');
+    return d;
+  }
+
+  // buscador
+  const sw = document.createElement('div'); sw.className = 'card'; sw.style.marginBottom = '12px';
+  const q = document.createElement('input'); q.type = 'text'; q.inputMode = 'search'; q.enterKeyHint = 'search'; q.placeholder = 'Buscar: PIN, ACWR, peso…';
+  q.setAttribute('aria-label', 'Buscar en el manual'); q.value = S.helpQuery || ''; q.style.width = '100%';
+  sw.appendChild(q); d.appendChild(sw);
+
+  const list = document.createElement('div'); d.appendChild(list);
+  function draw() {
+    list.innerHTML = '';
+    const arts = DATA.help || [];
+    if (!arts.length) {
+      list.innerHTML = '<div class="card"><div class="card-sub">No se pudo cargar el manual. Revisa la conexión o escríbenos.</div></div>';
+      return;
+    }
+    const term = helpNorm(S.helpQuery).trim();
+    let shown = 0;
+    arts.forEach(function (a) {
+      const hit = !term || helpNorm(a.title + ' ' + a.body_md).indexOf(term) !== -1;
+      if (!hit) return; shown++;
+      const det = document.createElement('details'); det.className = 'card help-art';
+      if (term || S.helpOpen === a.slug) det.open = true;
+      const sum = document.createElement('summary'); sum.textContent = a.title; det.appendChild(sum);
+      det.addEventListener('toggle', function () { if (det.open && !term) S.helpOpen = a.slug; });
+      const body = document.createElement('div'); body.className = 'help-body'; body.innerHTML = helpMdToHtml(a.body_md);
+      det.appendChild(body); list.appendChild(det);
+    });
+    if (!shown) list.innerHTML = '<div class="card"><div class="card-sub">Nada en el manual con «' + escapeHtml(S.helpQuery) + '». Prueba otra palabra o escríbenos.</div></div>';
+  }
+  q.oninput = function (e) { S.helpQuery = e.target.value; draw(); };
+  draw();
+
+  // soporte
+  const sup = document.createElement('div'); sup.className = 'card'; sup.style.marginTop = '12px';
+  sup.innerHTML = '<div class="card-title">¿No encuentras lo que buscas?</div>'
+    + '<div class="card-sub">Cuéntanos qué pantalla era, qué tocaste y qué esperabas ver.</div>';
+  const mail = document.createElement('a'); mail.className = 'btn btn-primary'; mail.style.cssText = 'display:block;text-align:center;margin-top:10px;text-decoration:none';
+  mail.textContent = 'Escribir a soporte';
+  mail.href = 'mailto:soporte@ondrift.app?subject=' + encodeURIComponent('Soporte Ondrift (app ' + APP_VERSION + ')');
+  sup.appendChild(mail); d.appendChild(sup);
   return d;
 }
 
