@@ -2,13 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#e8f2fb">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Ondrift STG">
+<meta name="apple-mobile-web-app-title" content="Ondrift">
 <!-- Icono de la pestaña: archivos junto al index (Safari no usa iconos incrustados como data:) -->
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
@@ -18,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
-<title>Ondrift STAGING v2.7</title>
+<title>Ondrift STAGING v3.3</title>
 <style>
   :root {
     --bg: #cfdbe9;
@@ -677,7 +676,7 @@
   .insc-ctrl button:disabled { opacity:0.4; cursor:default; }
   .insc-ctrl button:disabled:active { transform:none; }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <style id="diseno-a">
   /* ============================================================
      DISEÑO A · LIQUID GLASS REFINADO
@@ -950,7 +949,7 @@
   .hero-big { font-family: var(--font-display); font-weight: 800; font-size: 2.6rem; letter-spacing: -0.03em; line-height: 1; margin-top: 8px; font-variant-numeric: tabular-nums; color: var(--text); }
   .hero-big small { font-size: 1rem; font-weight: 600; color: var(--text2); margin-left: 4px; letter-spacing: 0; }
   .hero-title { font-size: 0.86rem; color: var(--text2); margin-top: 6px; }
-  .hero-blocks { display: grid; gap: 6px; margin-top: 14px; }
+  .hero-blocks { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin-top: 14px; }
   .hero-blk { display: flex; justify-content: space-between; gap: 10px; font-size: 0.8rem; padding: 9px 12px; border-radius: var(--r-sm); background: rgba(255,255,255,0.58); }
   .hero-blk span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .hero-blk b { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -1158,6 +1157,9 @@
 </style>
 <style id="bienestar-hoy">
   /* ---------- Bienestar hoy ---------- */
+  .bw-quote { flex-basis: 100%; font-size: 0.8rem; line-height: 1.4; color: var(--text); font-style: italic; background: rgba(255,255,255,0.55); border-left: 3px solid #5e5ce6; border-radius: 6px; padding: 6px 9px; margin-top: 2px; overflow-wrap: anywhere; }
+  .bw-quote span { font-style: normal; font-size: 0.68rem; color: var(--text2); margin-left: 4px; }
+  .bw-oneday { font-size: 0.74rem; color: var(--text2); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
   .bw-head { display: flex; justify-content: space-between; align-items: baseline; margin: 6px 2px 10px; }
   .bw-head .section-title { margin: 0; }
   .bw-head small { font-size: 0.7rem; color: var(--text2); font-weight: 500; }
@@ -1336,6 +1338,14 @@
 
   /* ---------- Hojas y menús: vidrio grande con esquinas muy redondeadas ---------- */
   .bottom-sheet { border-radius: 34px 34px 0 0 !important; background: linear-gradient(170deg, rgba(250,253,255,0.78), rgba(240,248,255,0.62)) !important; }
+  /* Hojas largas (encuestas, perfil): nunca más altas que la pantalla, con scroll propio
+     y la cabecera con el ✕ siempre a la vista. Antes crecían por arriba sin poder cerrarse. */
+  .bottom-sheet { max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 16px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important; }
+  .bottom-sheet > .sheet-title { position: sticky; top: -20px; z-index: 2; margin: -20px -20px 14px; padding: 20px 20px 12px;
+    background: linear-gradient(180deg, rgba(248,252,255,0.98) 70%, rgba(248,252,255,0)); border-radius: 34px 34px 0 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .bottom-sheet > .sheet-title .sheet-close { float: none; flex: none; min-width: 36px; min-height: 36px; font-size: 1rem; }
   .rpe-menu-box, .confirm-box { border-radius: 30px !important; background: linear-gradient(165deg, rgba(252,254,255,0.85), rgba(242,249,255,0.7)) !important;
     backdrop-filter: blur(30px) saturate(200%) !important; -webkit-backdrop-filter: blur(30px) saturate(200%) !important; }
   .rpe-menu-item { border-radius: 20px !important; }
@@ -1363,6 +1373,35 @@
   .news-card .btn { margin-top: 12px; flex: none; }
   /* Texto largo: vidrio casi opaco para leer cómodo */
   .news-ov .card.news-card { background: linear-gradient(165deg, rgba(252,254,255,0.94), rgba(244,250,255,0.88)) !important; }
+</style>
+<style id="mensaje-grupo">
+  /* ---------- Mensaje al grupo ---------- */
+  .tm-card { padding: 14px 16px; margin-bottom: 14px; border-left: 4px solid var(--accent) !important; }
+  .tm-eb { display: flex; align-items: center; gap: 6px; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent2); }
+  .tm-eb .tm-new { font-size: 0.58rem; padding: 2px 6px; border-radius: 99px; background: var(--red); color: #fff; letter-spacing: 0.04em; }
+  .tm-eb .tm-when { margin-left: auto; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--text2); }
+  .tm-text { font-size: 0.95rem; line-height: 1.5; color: var(--text); margin-top: 6px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .tm-ok { margin-top: 10px; }
+  .tm-compose textarea { min-height: 90px; margin-top: 8px; }
+  .tm-count { font-size: 0.68rem; color: var(--text2); text-align: right; margin-top: 4px; }
+  .tm-list { margin-top: 14px; }
+  .tm-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--line); }
+  .tm-item .tm-body { flex: 1; min-width: 0; }
+  .tm-item .tm-date { font-size: 0.68rem; color: var(--text2); }
+  .tm-item .tm-t { font-size: 0.84rem; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 2px; }
+  .tm-del { all: unset; box-sizing: border-box; cursor: pointer; width: 34px; height: 34px; flex: none; display: flex; align-items: center; justify-content: center; border-radius: 99px; color: var(--red2); background: rgba(229,72,77,0.08); border: 1px solid rgba(229,72,77,0.2); }
+  .tm-del svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .tm-del:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+<style id="novedades-alto">
+  /* El botón no puede quedar pegado abajo (barra de Safari / indicador de inicio) */
+  .news-card { max-height: min(600px, calc(100vh - 56px - env(safe-area-inset-top, 0px) - 150px - env(safe-area-inset-bottom, 0px))) !important;
+               max-height: min(600px, calc(100dvh - 56px - env(safe-area-inset-top, 0px) - 150px - env(safe-area-inset-bottom, 0px))) !important; }
+  .news-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  .news-head h3 { margin: 0 2px !important; }
+  .news-x { all: unset; box-sizing: border-box; cursor: pointer; width: 34px; height: 34px; flex: none; display: flex; align-items: center; justify-content: center; border-radius: 99px; color: var(--text2); background: rgba(11,34,54,0.06); }
+  .news-x svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+  .news-x:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>
 </head>
 <body>
@@ -1532,7 +1571,6 @@ let SB_LAST_ERROR = ''; // texto del último error devuelto por PostgREST
 let SB_ACCESS_TOKEN = null; // no restauramos token viejo al arrancar: caducaría y daría un 401 falso ("clave revocada"). El coach re-loguea por sesión.
 let SB_REFRESH_TOKEN = null; // el nadador sí: su refresh_token permite renovar el access_token caducado sin volver a pedir el PIN.
 let LAST_AUTH_ERROR = null; // 'confirm' | 'creds' | 'locked' | 'offline' | 'busy'
-let LAST_AUTH_MSG = null;   // texto del servidor cuando la cuenta está bloqueada
 let COACH_CREDS = null; // {email,password} SOLO en memoria durante la sesion; nunca se guarda en disco ni se hardcodea
 
 // Tras iniciar sesión: mira el estado real del coach (pending/approved) y quién es admin.
@@ -1588,11 +1626,7 @@ async function coachSignIn(email, password) {
     });
     if (!res.ok) {
       const t = await res.text(); console.error('Coach auth error', t);
-      if (res.status === 423) {
-        LAST_AUTH_ERROR = 'locked';
-        try { LAST_AUTH_MSG = (JSON.parse(t) || {}).error || null; } catch (e) { LAST_AUTH_MSG = null; }
-        return false;
-      }
+      if (res.status === 423) { LAST_AUTH_ERROR = 'locked'; return false; }
       if (res.status === 429 || res.status >= 500) { LAST_AUTH_ERROR = 'busy'; return false; }
       LAST_AUTH_ERROR = (t && t.indexOf('not confirmed') !== -1) ? 'confirm' : 'creds';
       return false;
@@ -1705,6 +1739,12 @@ window.addEventListener('unhandledrejection', function(e) {
 
 async function sbFetch(path, options, _retry) {
   if (SUPABASE_KEY.indexOf('PEGA_AQUI') === 0) { SB_STATUS = 'nokey'; return null; }
+  const method = (options && options.method || 'GET').toUpperCase();
+  if (method !== 'GET' && coachReadOnly() && path.indexOf('rpc/') !== 0) {
+    SB_LAST_ERROR = 'SOLO_LECTURA';
+    showToast('Solo lectura: elige un plan para editar', 'error');
+    return null;
+  }
   const url = SUPABASE_URL + '/rest/v1/' + path;
   const headers = {
     'apikey': SUPABASE_KEY,
@@ -1738,6 +1778,8 @@ async function sbFetch(path, options, _retry) {
       // Guardamos el motivo real para que quien llama lo pueda mostrar.
       SB_LAST_ERROR = err || '';
       if (res.status === 401) SB_STATUS = 'auth';
+      // La prueba pudo terminar con la app abierta: se relee el plan para mostrar el aviso.
+      if (S.role === 'coach' && /row-level security/i.test(SB_LAST_ERROR)) loadPlanStatus();
       return null;
     }
     SB_STATUS = 'ok';
@@ -1842,11 +1884,18 @@ async function dbAddAthlete(name) {
     if (row.active) return { ok: false, reason: 'duplicate_active' };
     const reactivated = await sbFetch('athletes?id=eq.' + row.id, { method:'PATCH', body: JSON.stringify({ active: true }) });
     _athleteCache = null;
-    return { ok: Array.isArray(reactivated) && reactivated.length > 0, reason: 'reactivated' };
+    const okR = Array.isArray(reactivated) && reactivated.length > 0;
+    return { ok: okR, reason: okR ? 'reactivated' : athleteWriteFailReason() };
   }
   const res = await sbFetch('athletes', { method:'POST', body: JSON.stringify({ name }) });
   _athleteCache = null;
-  return { ok: !!res, reason: res ? 'created' : 'error' };
+  return { ok: !!res, reason: res ? 'created' : athleteWriteFailReason() };
+}
+function athleteWriteFailReason() {
+  if (SB_LAST_ERROR === 'SOLO_LECTURA') return 'readonly';
+  const m = /LIMITE_NADADORES:(\d+)/.exec(SB_LAST_ERROR || '');
+  if (m) { if (S.planStatus) S.planStatus.athlete_limit = parseInt(m[1], 10); return 'limit'; }
+  return 'error';
 }
 async function dbUpdateAthleteMeta(id, fields) {
   // fields: { birth_date, consent_on_file, consent_note } — datos de menor de edad
@@ -1929,6 +1978,35 @@ async function dbSaveSession(date, slot, sessObj) {
     S._attSessionDate = null;
   }
   return res; // null si falló, array si guardó
+}
+// Fechas y turnos que va a escribir "Publicar" (mismo cálculo que el bucle de publicación)
+function sessionPublishTargets() {
+  const baseDate = S.sessionDate || todayStr();
+  const out = [];
+  for (let i = 0; i < (S.packDays || 1); i++) {
+    const d2 = new Date(baseDate + 'T12:00:00');
+    d2.setDate(d2.getDate() + i);
+    const ds = d2.getFullYear() + '-' + String(d2.getMonth() + 1).padStart(2, '0') + '-' + String(d2.getDate()).padStart(2, '0');
+    out.push({ date: ds, slot: S.sessionSlot === 'unica' ? 'am' : S.sessionSlot });
+  }
+  return out;
+}
+// Entrenos ya publicados que se reemplazarían. Lee del servidor (no de la caché).
+// Marca con .editing el que se abrió con el lápiz. null = no se pudo comprobar.
+async function sessionPublishConflicts(targets) {
+  const dates = targets.map(function(t) { return t.date; });
+  const rows = await sbFetch('sessions?select=date,slot,title&date=in.(' + dates.join(',') + ')');
+  if (rows === null) return null;
+  const ed = S.editingFrom;
+  // "Única" = un solo entreno de agua ese día: si había tarde, se borra (el físico se mantiene)
+  const unica = S.sessionSlot === 'unica';
+  return rows.filter(function(r) {
+    return targets.some(function(t) { return t.date === r.date && (t.slot === r.slot || (unica && r.slot === 'pm')); });
+  }).map(function(r) {
+    r.editing = !!(ed && ed.date === r.date && ed.slot === r.slot);
+    r.remove = unica && r.slot === 'pm';
+    return r;
+  }).sort(function(a, b) { return a.date < b.date ? -1 : (a.date > b.date ? 1 : (a.slot < b.slot ? -1 : 1)); });
 }
 async function dbGetAllSessions(weeks) {
   // Ventana de arranque: solo las últimas N semanas (por defecto 6).
@@ -2252,7 +2330,7 @@ async function dbGetAllAthleteHist() {
   await ensureSessionsLoaded();
   const from = new Date(); from.setDate(from.getDate() - 27);
   const fromS = from.getFullYear()+'-'+String(from.getMonth()+1).padStart(2,'0')+'-'+String(from.getDate()).padStart(2,'0');
-  const rows = await sbFetchAll('rpe_entries?select=date,slot,rpe,fatigue,athletes(name)&date=gte.' + fromS + '&order=date.asc,id.asc');
+  const rows = await sbFetchAll('rpe_entries?select=date,slot,rpe,fatigue,note,athletes(name)&date=gte.' + fromS + '&order=date.asc,id.asc');
   const map = {};
   if (!rows) return map;
   rows.forEach(function(r) {
@@ -2262,7 +2340,7 @@ async function dbGetAllAthleteHist() {
     const day = DATA.sessions && DATA.sessions[r.date];
     if (day && day[r.slot] && day[r.slot].duration) { dur = day[r.slot].duration; estimated = false; }
     if (!map[name]) map[name] = [];
-    map[name].push({ date: r.date, slot: r.slot, rpe: r.rpe, fatigue: r.fatigue, duration: dur, durationEstimated: estimated });
+    map[name].push({ date: r.date, slot: r.slot, rpe: r.rpe, fatigue: r.fatigue, note: r.note || '', duration: dur, durationEstimated: estimated });
   });
   return map;
 }
@@ -2321,8 +2399,12 @@ async function dbAddCompetition(comp) {
   });
   _compCache = null;
 }
-async function dbDeleteSession(date) {
-  await sbFetch('sessions?date=eq.' + date, { method: 'DELETE', prefer: 'return=minimal' });
+// slot opcional: 'am' | 'pm' | 'fis'. Sin slot borra el día entero.
+// Devuelve las filas borradas, o null si el servidor lo rechazó (antes se ignoraba
+// y la app lo daba por borrado aunque siguiera en la base).
+async function dbDeleteSession(date, slot) {
+  const rows = await sbFetch('sessions?date=eq.' + date + (slot ? '&slot=eq.' + slot : ''), { method: 'DELETE', prefer: 'return=representation' });
+  if (rows === null) return null;
   delete _sessionCache[date];
   // Misma razón que en dbSaveSession: invalidar la copia en memoria de
   // Asistencia si estaba mirando esta fecha, para no arrastrar un _id
@@ -2331,6 +2413,23 @@ async function dbDeleteSession(date) {
     S._attSessionDate = null;
   }
   // NO anulamos _allSessionsCache: el llamador la actualiza en memoria para no perder meses cargados
+  return rows;
+}
+// Quita de la caché en memoria un turno (o el día) ya borrado, sin refetch (preserva meses cargados)
+function dropSessionFromCache(date, slot) {
+  _allSessionsCache = (_allSessionsCache || []).filter(function(x) {
+    if (x.date !== date) return true;
+    if (!slot) return false;
+    x.data = Object.assign({}, x.data); x.data[slot] = null;
+    return daySlots(x.data).length > 0;
+  });
+  DATA.allSessions = _allSessionsCache;
+  DATA.sessions = {}; _allSessionsCache.forEach(function(x){ DATA.sessions[x.date] = x.data; });
+}
+function sessionDeleteError() {
+  return /foreign key|violates/i.test(SB_LAST_ERROR || '')
+    ? 'No se puede borrar: ya tiene asistencia o fuerza registrada'
+    : '⚠ No se pudo borrar. Reintenta';
 }
 async function dbSetInscWindow(compId, openDate, closeDate) {
   const body = {};
@@ -2776,7 +2875,7 @@ function resetSession() {
   // dispositivo del nadador, con su propia opción "Cambiar de equipo".
   S.role = null; S.athleteName = null; S.isAdmin = false;
   S.showCoachAdmin = false; S.coachList = null; S.myTeamCode = null;
-  S.coachStatus = null; S.coachEmail = null; S.coachProfile = undefined; S.showProfile = false;
+  S.coachStatus = null; S.coachEmail = null; S.coachProfile = undefined; S.planStatus = null; S.showProfile = false;
   S.tab = 0; S.ath_tab = 0;
   S._cstrLoading = false; S._strLoading = false;
 }
@@ -2861,6 +2960,7 @@ async function loadData() {
     dbGetComments().then(c => { DATA.comments = c; }),
     dbGetCompetitions().then(c => { DATA.competitions = c; }),
     dbGetEvents().then(e => { DATA.events = e; }),
+    dbGetTeamMessages().then(m => { DATA.teamMessages = m; }),
     dbGetInscriptions().then(i => { DATA.inscriptions = i; }),
     dbGetDayWellness(todayStr()).then(w => { DATA.wellness[todayStr()] = w; })
   ];
@@ -3358,6 +3458,41 @@ async function dbSaveBodyweight(athleteId, weight) {
 // e1RM ajustado por RIR: reps efectivas = reps + rir
 function e1rmAdj(effLoad, reps, rir) { return effLoad * (1 + (reps + (rir || 0)) / 30); }
 
+// Sugerencia de 72 h para el gimnasio (solo orientativa: no cambia la carga sugerida).
+//  · RPE alto: RPE ≥ objetivo + 2 en 2 de los últimos 3 días.
+//  · Bienestar bajo: último check-in de las 72 h por debajo de 12 sobre 20 (sueño + músculos + fatiga + estrés).
+//  · Cansado: marca Cansado o Agotado 2 de los últimos 3 días.
+//  Rojo = RPE alto + (bienestar bajo o cansado) · Amarillo = una de las tres · Verde = nada · Gris = sin datos.
+const GYM72_WELL_CUT = 12;
+function gymHint72(name) {
+  const today = todayStr();
+  const days3 = [0, 1, 2].map(function (i) { return dateOffsetA(today, -i); });
+  const rpe = (DATA.athleteHist[name] || []).filter(function (h) { return days3.indexOf(h.date) !== -1; });
+  const over = {}, tired = {};
+  rpe.forEach(function (h) {
+    const day = DATA.sessions && DATA.sessions[h.date];
+    const sess = day && day[h.slot];
+    const target = sess && sess.targetRPE != null ? Number(sess.targetRPE) : null;
+    if (target != null && h.rpe != null && h.rpe >= target + 2) over[h.date] = true;
+    if (h.fatigue != null && h.fatigue >= 4) tired[h.date] = true;
+  });
+  const byDate = {};
+  ((DATA.teamWellHist && DATA.teamWellHist[name]) || []).forEach(function (w) { byDate[w.date] = w; });
+  const tw = getDayWellness(today)[name]; if (tw) byDate[today] = tw;
+  let comp = null;
+  for (let i = 0; i < days3.length && comp == null; i++) comp = wellComposite(byDate[days3[i]]);
+  const nOver = Object.keys(over).length, nTired = Object.keys(tired).length;
+  const A = nOver >= 2, B = comp != null && comp < GYM72_WELL_CUT, C = nTired >= 2;
+  const why = [];
+  if (A) why.push('RPE alto ' + nOver + ' de 3 días');
+  if (B) why.push('bienestar ' + comp + '/20');
+  if (C) why.push('cansado ' + nTired + ' de 3 días');
+  if (!rpe.length && comp == null) return { color: '#9aa7b4', title: 'Sin datos de las últimas 72 h', why: '' };
+  if (A && (B || C)) return { color: '#e5484d', title: 'Bajar la carga hoy', why: why.join(' · ') };
+  if (A || B || C) return { color: '#f5a524', title: 'Vigilar hoy', why: why.join(' · ') };
+  return { color: '#30a46c', title: 'Normal', why: 'RPE en objetivo' + (comp != null ? ' · bienestar ' + comp + '/20' : '') };
+}
+
 function buildCoachStrength() {
   const d = document.createElement('div');
 
@@ -3365,6 +3500,19 @@ function buildCoachStrength() {
     if (!S._cstrLoading) { S._cstrLoading = true; dbLoadCoachStrength().then(function () { S._cstrLoading = false; render(); }); }
     d.innerHTML = '<div class="card"><div class="card-sub" style="text-align:center">Cargando…</div></div>';
     return d;
+  }
+
+  // Historial de RPE y check-ins (28 d) para la sugerencia de 72 h; no bloquea la pantalla
+  if ((!DATA.allHistLoaded || !DATA.teamWellHist) && !S._gym72Loading && !S._gym72Failed) {
+    S._gym72Loading = true;
+    Promise.all([
+      DATA.teamWellHist ? Promise.resolve() : dbGetTeamWellness(28).then(function (m) { DATA.teamWellHist = m; }),
+      DATA.allHistLoaded ? Promise.resolve() : dbGetAllAthleteHist().then(function (map) {
+        Object.keys(map).forEach(function (n) { DATA.athleteHist[n] = map[n]; });
+        DATA.allHistLoaded = true;
+      })
+    ]).then(function () { S._gym72Loading = false; render(); })
+      .catch(function () { S._gym72Loading = false; S._gym72Failed = true; render(); });
   }
 
   if (S.coachStrReps === undefined) S.coachStrReps = 6;
@@ -3402,20 +3550,50 @@ function buildCoachStrength() {
     const nm = document.createElement('div'); nm.className = 'card-title'; nm.style.cssText = 'margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'; nm.textContent = a.name;
     head.appendChild(nm);
     const bwWrap = document.createElement('div'); bwWrap.style.cssText = 'display:flex;align-items:center;gap:6px';
+    // El peso se guarda solo al salir del campo (o con Intro) y queda hasta que se cambie:
+    // antes había que tocar "kg" y, si no, se perdía al recargar.
     const bwIn = document.createElement('input'); bwIn.type = 'number'; bwIn.inputMode = 'decimal';
     bwIn.placeholder = 'peso'; bwIn.style.cssText = 'width:70px;text-align:right';
+    bwIn.setAttribute('aria-label', 'Peso corporal de ' + a.name + ' en kg');
     bwIn.value = (S.coachStrBwInput[a.id] !== undefined) ? S.coachStrBwInput[a.id] : (bwSaved != null ? bwSaved : '');
     bwIn.oninput = function (e) { S.coachStrBwInput[a.id] = e.target.value; };
-    bwIn.onblur = function () { render(); };
-    const bwBtn = document.createElement('button'); bwBtn.className = 'btn'; bwBtn.textContent = 'kg';
-    bwBtn.style.cssText = 'padding:8px 12px;min-width:auto';
-    bwBtn.onclick = function () {
-      const v = S.coachStrBwInput[a.id]; if (v === '' || v == null) return;
-      bwBtn.textContent = '…'; bwBtn.disabled = true;
-      dbSaveBodyweight(a.id, Number(v)).then(function () { S.coachStrBwInput[a.id] = undefined; render(); });
-    };
-    bwWrap.appendChild(bwIn); bwWrap.appendChild(bwBtn); head.appendChild(bwWrap);
+    const bwState = document.createElement('span'); bwState.style.cssText = 'font-size:0.75rem;color:var(--text3);min-width:22px';
+    bwState.textContent = 'kg';
+    let bwSaving = false;
+    function saveBw() {
+      const raw = S.coachStrBwInput[a.id];
+      if (raw === undefined) return;                       // no se tocó
+      const v = Number(String(raw).replace(',', '.'));
+      if (raw === '' || isNaN(v)) { S.coachStrBwInput[a.id] = undefined; render(); return; }
+      if (v < 20 || v > 200) { showToast('El peso debe estar entre 20 y 200 kg', 'error'); return; }
+      if (bwSaved != null && Number(bwSaved) === v) { S.coachStrBwInput[a.id] = undefined; render(); return; }
+      if (bwSaving) return; bwSaving = true; bwState.textContent = '…';
+      dbSaveBodyweight(a.id, Math.round(v * 10) / 10).then(function (res) {
+        bwSaving = false;
+        if (!res) { bwState.textContent = '⚠'; showToast('No se guardó el peso. Reintenta', 'error'); return; }
+        S.coachStrBwInput[a.id] = undefined;
+        showToast('✓ Peso de ' + a.name + ' guardado', 'success');
+        render();
+      });
+    }
+    bwIn.onblur = saveBw;
+    bwIn.onkeydown = function (e) { if (e.key === 'Enter') { e.preventDefault(); bwIn.blur(); } };
+    bwWrap.appendChild(bwIn); bwWrap.appendChild(bwState); head.appendChild(bwWrap);
     card.appendChild(head);
+
+    // Sugerencia de 72 h: punto de color + título + motivo
+    const hint = document.createElement('div');
+    hint.style.cssText = 'display:flex;align-items:baseline;gap:8px;margin:-4px 0 10px;font-size:0.8rem;color:var(--text2);min-width:0';
+    let h72;
+    if (DATA.allHistLoaded && DATA.teamWellHist) h72 = gymHint72(a.name);
+    else h72 = { color: '#9aa7b4', title: S._gym72Failed ? 'Sugerencia de 72 h no disponible' : 'Calculando las últimas 72 h…', why: '' };
+    const dot = document.createElement('span');
+    dot.style.cssText = 'width:10px;height:10px;border-radius:50%;flex-shrink:0;background:' + h72.color;
+    dot.setAttribute('aria-hidden', 'true');
+    const ht = document.createElement('span'); ht.style.cssText = 'min-width:0;line-height:1.35';
+    ht.innerHTML = '<strong style="color:var(--text)">' + escapeHtml(h72.title) + '</strong>' + (h72.why ? ' · ' + escapeHtml(h72.why) : '');
+    hint.appendChild(dot); hint.appendChild(ht);
+    card.appendChild(hint);
 
     // tabla de ejercicios
     (DATA.strengthEx || []).forEach(function (ex) {
@@ -3602,7 +3780,10 @@ function buildAthleteStrength() {
     [['load', ex.uses_bodyweight ? 'Lastre' : 'Carga', 'kg'], ['reps', 'Reps', ''], ['rir', 'RIR', '']].forEach(function (f) {
       const wrap = document.createElement('div'); wrap.style.flex = '1';
       const lbl = document.createElement('div'); lbl.className = 'field-label'; lbl.textContent = f[1] + (f[2] ? ' (' + f[2] + ')' : '');
-      const inp = document.createElement('input'); inp.type = 'number'; inp.inputMode = 'decimal';
+      const inp = document.createElement('input'); inp.type = 'number';
+      inp.inputMode = f[0] === 'load' ? 'decimal' : 'numeric';
+      if (f[0] === 'reps') { inp.min = '1'; inp.max = '30'; inp.step = '1'; }
+      if (f[0] === 'rir') { inp.min = '0'; inp.max = '10'; inp.step = '1'; }
       inp.value = inputVal[f[0]]; inp.placeholder = '—';
       inp.oninput = function (e) { S.strInput[ex.id][f[0]] = e.target.value; };  // sin render: no pierde foco
       wrap.appendChild(lbl); wrap.appendChild(inp); row.appendChild(wrap);
@@ -3634,6 +3815,18 @@ function buildAthleteStrength() {
     btn.onclick = function () {
       const v = S.strInput[ex.id];
       if (v.load === '' || v.reps === '') { alert('Pon al menos carga y reps'); return; }
+      // La base de datos solo acepta reps 1-30 y RIR 0-10 enteros: avisar antes de enviar
+      // (antes devolvía un error y solo se veía "No se guardó — reintenta").
+      const nLoad = Number(String(v.load).replace(',', '.'));
+      const nReps = Number(String(v.reps).replace(',', '.'));
+      const nRir = v.rir === '' ? null : Number(String(v.rir).replace(',', '.'));
+      if (isNaN(nLoad) || nLoad < 0) { alert('La carga tiene que ser un número de kg (0 o más).'); return; }
+      if (!Number.isInteger(nReps) || nReps < 1 || nReps > 30) {
+        alert('Las repeticiones van de 1 a 30, sin decimales.' + (!Number.isInteger(nReps) ? ' ¿Has puesto la carga en la casilla de reps?' : ''));
+        return;
+      }
+      if (nRir !== null && (!Number.isInteger(nRir) || nRir < 0 || nRir > 10)) { alert('El RIR va de 0 a 10, sin decimales.'); return; }
+      v.load = nLoad; v.reps = nReps; v.rir = nRir === null ? '' : nRir;
       if (ex.uses_bodyweight && Number(v.load) > 25 && !confirm('Pon solo el lastre que añades, sin tu peso corporal. ¿Seguro que añades ' + v.load + ' kg?')) return;
       btn.disabled = true; btn.textContent = 'Guardando…';
       dbSaveStrengthSet(S.athleteName, ex.id, Number(v.load), Number(v.reps), v.rir === '' ? null : Number(v.rir), sessionId)
@@ -3675,8 +3868,10 @@ function render() {
   if (S.role === 'coach_pending') { trackScreen('coach_pending'); app.appendChild(buildCoachPending()); return; }
 
   app.appendChild(buildHeader());
+  const planBanner = buildPlanBanner();
+  if (planBanner) app.appendChild(planBanner);
   if (S.showChangelog) app.appendChild(buildChangelogPanel());
-  if (S.role === 'coach' && (S.showProfile || (S.coachProfile && !S.coachProfile.adult_confirmed_at))) app.appendChild(buildProfileSheet());
+  if (S.role === 'coach' && (S.showProfile || (S.coachProfile && !S.coachProfile.adult_confirmed_at && !S.profileSkipped))) app.appendChild(buildProfileSheet());
   const content = document.createElement('div');
   content.className = 'content';
 
@@ -4054,7 +4249,7 @@ function buildPin() {
     err.textContent = (LAST_AUTH_ERROR === 'confirm')
       ? 'Tienes que confirmar tu email antes de entrar. Busca el correo de confirmaci\u00f3n en tu bandeja (y en spam).'
       : (LAST_AUTH_ERROR === 'locked')
-      ? (LAST_AUTH_MSG || 'Demasiados intentos fallidos. Int\u00e9ntalo de nuevo en unos minutos.')
+      ? 'Cuenta bloqueada por intentos fallidos. Ped\u00ed a tu entrenador/admin que la reactive.'
       : (LAST_AUTH_ERROR === 'offline')
       ? 'Sin conexi\u00f3n. Revisa tu internet e int\u00e9ntalo de nuevo.'
       : (LAST_AUTH_ERROR === 'busy')
@@ -4605,13 +4800,38 @@ async function openCoachAdminModal() {
 // Cada dispositivo recuerda en localStorage cuál fue la última que vio.
 // ============================================================
 const CHANGELOG = [
+  { v: 21, date: '2026-11-11', role: 'coach', text: '<div class="nt">Fuerza: sugerencia de las últimas 72 h</div><ul>'
+    + '<li>Cada nadador tiene un <b>punto de color</b> con una sugerencia para el gimnasio de hoy.</li>'
+    + '<li><b>Rojo · Bajar la carga</b>: RPE 2 puntos o más por encima del objetivo 2 de 3 días y, además, bienestar por debajo de 12/20 o cansado 2 de 3 días.</li>'
+    + '<li><b>Amarillo · Vigilar</b>: solo una de esas señales. <b>Verde</b>: nada fuera de lo normal.</li>'
+    + '<li>Es solo una sugerencia: la carga sugerida no cambia, decides tú.</li></ul>' },
+  { v: 20, date: '2026-11-10', role: 'coach', text: '<div class="nt">Bienestar hoy mira las últimas 72 horas</div><ul>'
+    + '<li>Sale quien marca <b>Cansado o Agotado 2 de los últimos 3 días</b>, tiene el <b>RPE 2 puntos o más por encima del objetivo 2 de 3 días</b>, está <b>bajo su media de bienestar 2 de 3 días</b> o marca <b>sueño o músculos en 1–2 dos de los 3 días</b>. Un día malo suelto sigue sin salir.</li>'
+    + '<li>Las <b>notas</b> con agotamiento, ánimo bajo o dolor salen siempre, con la frase.</li>'
+    + '<li>El <b>ACWR ya no saca a nadie solo</b>: con al menos 3 semanas de datos, si está en 1,5 o más se añade como "Carga alta" a quien ya tiene otra señal. Sigue visible en Carga.</li></ul>' },
+  { v: 19, date: '2026-10-30', role: 'coach', text: '<div class="nt">Bienestar hoy, solo lo importante</div><ul>'
+    + '<li>Un <b>día malo suelto ya no sale</b> en la lista: se cuenta abajo hasta que se repita.</li>'
+    + '<li>Sale quien está <b>bajo su media 3 de los últimos 4 días</b>, lleva <b>3 días o más cansado</b>, o tiene la <b>carga al límite</b> (ACWR por encima de 1,5).</li>'
+    + '<li>Ahora se leen las <b>notas del RPE</b>: si alguien escribe que no puede más o menciona dolor varios días, aparece con su frase.</li>'
+    + '<li><b>Ajustar hoy</b> cruza las dos cosas: carga alta (ACWR 1,4 o más) y alguna de esas señales.</li></ul>' },
+  { v: 18, date: '2026-10-28', role: 'athlete', text: '<div class="nt">Ya no tienes que poner el PIN cada vez</div><ul>'
+    + '<li>Después de entrar una vez con tu PIN, la app <b>te recuerda</b>: al abrirla entras directamente.</li>'
+    + '<li>Si llevas mucho tiempo sin abrirla, verás <b>tu nombre ya elegido</b> y solo tendrás que poner el PIN.</li>'
+    + '<li>La lista de nombres aparece al abrir la app, sin volver a meter el código del equipo.</li>'
+    + '<li>Si tocas <b>Salir</b>, la app deja de recordarte.</li></ul>' },
+  { v: 17, date: '2026-10-28', text: '<div class="nt">Ondrift estrena logo</div><ul>'
+    + '<li>Nuevo logo: una <b>O</b> y una <b>D</b> con su estela, en los azules de la app.</li>'
+    + '<li>Al abrir la app, el logo entra girando en 3D con un destello de luz.</li>'
+    + '<li><b>Para ver el icono nuevo en tu móvil</b>: mantén pulsado el icono de Ondrift → <b>Eliminar app</b> → <b>Eliminar de la pantalla de inicio</b>. Luego abre ondrift.app en Safari → botón compartir → <b>Añadir a pantalla de inicio</b>.</li></ul>' },
+  { v: 16, date: '2026-10-27', role: 'athlete', text: '<div class="nt">Mensajes de tu entrenador</div><ul><li>Cuando tu entrenador escriba al grupo, lo verás <b>arriba en Inicio</b> con un punto rojo hasta que lo leas.</li></ul>' },
+  { v: 15, date: '2026-10-27', role: 'coach', text: '<div class="nt">Mensaje al grupo</div><ul><li>En <b>Más → Equipo</b> puedes escribir un mensaje a todos tus nadadores (motivación, avisos…). Les aparece arriba en Inicio con un punto rojo hasta que lo leen.</li><li>Ahí mismo ves los últimos mensajes y puedes borrarlos.</li></ul>' },
   { v: 14, date: '2026-10-26', role: 'coach', text: '<div class="nt">Tu perfil</div><ul><li>Toca tu <b>inicial</b> (arriba a la derecha) para poner tu nombre, ver tu plan y confirmar que eres mayor de edad.</li></ul>' },
   { v: 13, date: '2026-10-26', role: 'athlete', text: '<div class="nt">Para ti, nadador</div><ul>'
     + '<li>En <b>Inicio</b> ves tu <b>sesión de hoy</b> con los metros de cada bloque y un botón para registrar el RPE.</li>'
     + '<li><b>Esta semana</b>: tus días de lunes a domingo con el RPE que pusiste cada día.</li>'
     + '<li>Tu entrenador ahora ve tu <b>check-in de la mañana</b> comparado con tu propia media. Cuanto más sincero seas, mejor te puede ajustar el entreno.</li></ul>' },
   { v: 12, date: '2026-10-26', role: 'coach', text: '<div class="nt">Para ti, entrenador</div><ul>'
-    + '<li><b>Barra nueva</b>: Sesión, Carga, Calendario, Equipo y Más. <b>Carga</b> une RPE y Escuadra con un selector arriba; en <b>Más</b> están Inscripciones, Historial y Asistencia.</li>'
+    + '<li><b>Barra nueva</b>: Sesión, Carga, Historial, Asistencia y Más. <b>Carga</b> une RPE y Escuadra con un selector arriba; en <b>Más</b> están Calendario, Inscripciones y Equipo.</li>'
     + '<li><b>Bienestar hoy</b> (Escuadra): quién está por debajo de su media de check-in, junto a su ACWR, su último RPE y su estado. Marca <b>Ajustar hoy</b> si además tiene la carga alta, y avisa si lleva varios días cansado. Toca <b>⋯</b> para ver sus 14 días y escribirle.</li>'
     + '<li><b>ACWR por atleta</b> en tarjetas con barra de zona y puntos de color. Toca una tarjeta para ver la fecha del último RPE y el detalle.</li>'
     + '<li><b>RPE de hoy</b> en lista, con un botón <b>⋯</b> para el comentario o el test de lactato, y los que faltan aparte.</li>'
@@ -4703,12 +4923,12 @@ function latestChangelogV() {
 // lee y los muestra (no puede cambiar el plan ni deshacer la mayoría de edad).
 // ============================================================
 // Versión de la app: subir el número en cada cambio (2.0 = archivo de producción del 26-oct-2026)
-const APP_VERSION = '2.7';
-const PLAN_URL = 'https://ondrift.app/#precio';
-const LEGAL_TERMS_URL = 'https://ondrift.app/terminos-ondrift.html';
-const LEGAL_PRIVACY_URL = 'https://ondrift.app/privacidad-datos.html';
+const APP_VERSION = '3.3';
+const PLAN_URL = 'https://ondrift.app/?landing#precio';
+const LEGAL_TERMS_URL = 'https://ondrift.app/terminos';
+const LEGAL_PRIVACY_URL = 'https://ondrift.app/privacidad';
 const TRIAL_DAYS = 15;
-const PLAN_LABELS = { individual: 'Individual', duo: 'Dúo', club: 'Club' };
+const PLAN_LABELS = { individual: 'Individual', duo: 'Dúo', grupo4: 'Grupo de 4', club: 'Club', inactive: 'Sin plan activo' };
 
 async function coachRpc(name, body, _retry) {
   try {
@@ -4734,12 +4954,55 @@ async function loadCoachProfile() {
   const r = await coachRpc('my_coach_profile');
   if (S.role !== 'coach') return;
   if (r.ok && r.data && r.data[0]) { S.coachProfile = r.data[0]; render(); }
+  loadPlanStatus();
+}
+
+// Prueba, límite de nadadores y modo solo lectura. Las reglas viven en la base de datos
+// (my_plan_status, coach_can_write, límite por trigger); aquí solo se muestran.
+// Si la función no existe o falla, S.planStatus queda en null y la app funciona como antes.
+async function loadPlanStatus() {
+  const r = await coachRpc('my_plan_status');
+  if (S.role !== 'coach') return;
+  S.planStatus = (r.ok && r.data && r.data[0]) ? r.data[0] : null;
+  render();
+}
+function coachReadOnly() {
+  return S.role === 'coach' && !!S.planStatus && S.planStatus.can_write === false;
+}
+function athleteLimitMsg(limit) {
+  return 'Tu plan permite hasta ' + limit + ' nadadores activos. Desactiva alguno o cambia de plan para añadir más.';
+}
+
+function buildPlanBanner() {
+  const ps = S.planStatus;
+  if (S.role !== 'coach' || !ps || ps.is_admin) return null;
+  let msg = null;
+  if (ps.can_write === false) {
+    msg = ps.plan === 'trial'
+      ? 'Tu prueba gratuita ha terminado. Puedes consultar todo tu historial, pero para planificar y editar necesitas un plan.'
+      : 'No tienes un plan activo. Puedes consultar tu historial, pero para planificar y editar necesitas un plan.';
+  } else if (ps.plan === 'trial' && ps.days_left !== null && ps.days_left <= 3) {
+    msg = ps.days_left <= 1 ? 'Hoy es el último día de tu prueba gratuita.' : 'Te quedan ' + ps.days_left + ' días de prueba gratuita.';
+  }
+  if (!msg) return null;
+  const b = document.createElement('div');
+  b.className = 'card plan-banner';
+  b.setAttribute('role', 'status');
+  b.style.cssText = 'margin:12px 16px 0;padding:12px 14px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px solid ' + (ps.can_write === false ? 'rgba(200,146,10,0.55)' : 'rgba(52,152,219,0.45)');
+  const t = document.createElement('div'); t.style.cssText = 'font-size:0.85rem;line-height:1.4;flex:1 1 220px;font-weight:600';
+  t.textContent = msg;
+  const a = document.createElement('a'); a.className = 'btn btn-primary btn-sm';
+  a.href = PLAN_URL; a.target = '_blank'; a.rel = 'noopener';
+  a.style.cssText = 'text-decoration:none;white-space:nowrap';
+  a.textContent = 'Ver planes';
+  b.append(t, a);
+  return b;
 }
 
 function buildProfileSheet() {
   const p = S.coachProfile || {};
-  const forced = !p.adult_confirmed_at;   // primera vez: hay que confirmar antes de seguir
-  const close = function() { S.showProfile = false; render(); };
+  const forced = !!S.coachProfile && !p.adult_confirmed_at;   // primera vez (si no se pudo leer el perfil, nunca obliga): se pide confirmar, pero siempre se puede dejar para luego
+  const close = function() { S.showProfile = false; if (forced) S.profileSkipped = true; render(); };
 
   const overlay = document.createElement('div'); overlay.className = 'overlay open';
   if (!forced) overlay.onclick = function(e) { if (e.target === overlay) close(); };
@@ -4785,19 +5048,29 @@ function buildProfileSheet() {
   const planLbl = document.createElement('label'); planLbl.className = 'field-label'; planLbl.style.marginTop = '0'; planLbl.textContent = 'Plan';
   const planTxt = document.createElement('div'); planTxt.style.cssText = 'font-weight:700;margin-top:4px';
   planBox.append(planLbl, planTxt);
+  const ps = S.planStatus;
   if (p.is_admin) {
     planTxt.textContent = 'Administrador';
-  } else if (plan === 'trial') {
-    let d = null;
-    if (p.trial_start) d = TRIAL_DAYS - Math.floor((Date.now() - new Date(p.trial_start).getTime()) / 86400000);
-    planTxt.textContent = (d !== null && d > 0) ? 'Prueba gratuita · te quedan ' + d + (d === 1 ? ' día' : ' días') : 'Prueba gratuita';
+  } else if (plan === 'trial' || plan === 'inactive') {
+    let d = ps ? ps.days_left : null;
+    if (d === null && plan === 'trial' && p.trial_start) d = TRIAL_DAYS - Math.floor((Date.now() - new Date(p.trial_start).getTime()) / 86400000);
+    if (plan === 'inactive') planTxt.textContent = 'Sin plan activo · solo lectura';
+    else if (ps && ps.can_write === false) planTxt.textContent = 'Prueba gratuita terminada · solo lectura';
+    else planTxt.textContent = (d !== null && d > 0) ? 'Prueba gratuita · te quedan ' + d + (d === 1 ? ' día' : ' días') : 'Prueba gratuita';
     const cta = document.createElement('a'); cta.className = 'btn btn-primary';
     cta.href = PLAN_URL; cta.target = '_blank'; cta.rel = 'noopener';
     cta.style.cssText = 'display:block;text-align:center;text-decoration:none;margin-top:10px';
     cta.textContent = 'Ver planes y suscribirme';
     planBox.appendChild(cta);
+  } else if (plan === 'free') {
+    planTxt.textContent = 'Gratis de por vida';
   } else {
     planTxt.textContent = 'Plan ' + (PLAN_LABELS[plan] || plan);
+  }
+  if (ps && ps.athlete_limit) {
+    const used = document.createElement('div'); used.style.cssText = 'font-size:0.82rem;color:var(--text2);margin-top:6px';
+    used.textContent = 'Nadadores: ' + ps.athlete_count + ' de ' + ps.athlete_limit;
+    planTxt.after(used);
   }
   sheet.appendChild(planBox);
 
@@ -4814,12 +5087,26 @@ function buildProfileSheet() {
     }
     save.disabled = true; err.textContent = '';
     const r = await coachRpc('save_coach_profile', { p_name: name, p_adult: !!(adultIn && adultIn.checked) });
-    if (!r.ok) { save.disabled = false; err.textContent = 'No se pudo guardar. Inténtalo de nuevo.'; return; }
+    if (!r.ok) {
+      save.disabled = false;
+      const why = r.data && (r.data.message || r.data.hint);
+      console.error('save_coach_profile', r.data);
+      err.textContent = 'No se pudo guardar' + (why ? ' (' + why + ')' : '') + '. Puedes seguir usando la app y probar más tarde.';
+      return;
+    }
     S.showProfile = false;
     await loadCoachProfile();
+    // Si la base no devolvió la confirmación, no se vuelve a abrir en esta sesión
+    if (S.coachProfile && !S.coachProfile.adult_confirmed_at) S.profileSkipped = true;
     render();
   };
   sheet.appendChild(save);
+  if (forced) {
+    const later = document.createElement('button'); later.className = 'btn btn-secondary'; later.style.marginTop = '8px';
+    later.textContent = 'Ahora no';
+    later.onclick = close;
+    sheet.appendChild(later);
+  }
 
   const ver = document.createElement('div');
   ver.style.cssText = 'text-align:center;font-size:0.72rem;color:var(--text2);margin-top:12px';
@@ -4835,8 +5122,13 @@ function buildChangelogPanel() {
   ov.onclick = function(e) { if (e.target === ov) { setLastSeenChangelog(latestChangelogV()); S.showChangelog = false; render(); } };
   const card = document.createElement('div'); card.className = 'card news-card';
   card.setAttribute('role', 'dialog'); card.setAttribute('aria-label', 'Novedades');
+  const head = document.createElement('div'); head.className = 'news-head';
   const h3 = document.createElement('h3'); h3.textContent = 'Novedades';
-  card.appendChild(h3);
+  const x = document.createElement('button'); x.className = 'news-x'; x.setAttribute('aria-label', 'Cerrar');
+  x.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  x.onclick = function() { setLastSeenChangelog(latestChangelogV()); S.showChangelog = false; render(); };
+  head.append(h3, x);
+  card.appendChild(head);
   const list = document.createElement('div'); list.className = 'news-list';
   const seen = getLastSeenChangelog();
   visibleChangelog().forEach(function(c) {
@@ -4902,7 +5194,7 @@ function buildBottomNav() {
       MORE.forEach(function(m) {
         const b = document.createElement('button');
         b.className = 'nav-more-item' + (S.tab === m.tab ? ' active' : '');
-        b.innerHTML = `<svg viewBox="0 0 24 24">${NAV_ICONS[m.icon]}</svg><span>${m.label}</span>`;
+        b.innerHTML = `<svg viewBox="0 0 24 24">${NAV_ICONS[m.icon]}</svg><span>${m.label}</span>` + (m.icon === 'equipo' && S.isAdmin && S.pendingCoachCount > 0 ? '<span style="margin-left:auto;width:8px;height:8px;border-radius:50%;background:#e5484d;flex:none" aria-label="Entrenadores pendientes"></span>' : '');
         b.onclick = go(m.tab);
         sheet.appendChild(b);
       });
@@ -4920,7 +5212,7 @@ function buildBottomNav() {
     ];
     const pending = athleteHasPendingToday(S.athleteName);
     items.forEach(function(item, i) {
-      nav.appendChild(mk(item.icon, item.label, S.ath_tab === i, function() { S.ath_tab = i; render(); }, i === 0 && pending));
+      nav.appendChild(mk(item.icon, item.label, S.ath_tab === i, function() { S.ath_tab = i; render(); }, i === 0 && (pending || teamMsgUnseen())));
     });
   }
   return nav;
@@ -5113,7 +5405,7 @@ function buildCoachSession() {
     showConfirm('¿Borrar sesión?', 'Se perderán todos los campos cargados en el editor.', () => {
       S.sessionTitle=''; S.sessionRPE=6; S.sessionDuration=80; S.sessionPhase='Ligero'; S.sessionDate=todayStr();
       S.alphaPhase=null; S.pullText=''; S.pushText=''; S.lowerText='';
-      S.warmUp=''; S.preSet=''; S.mainSet=''; S.mainSetFondo=''; S.coolDown=''; S.packDays=1;
+      S.warmUp=''; S.preSet=''; S.mainSet=''; S.mainSetFondo=''; S.coolDown=''; S.packDays=1; S.editingFrom=null;
       render();
     });
   };
@@ -5121,7 +5413,7 @@ function buildCoachSession() {
 
   const pubBtn = document.createElement('button');
   pubBtn.className = 'btn btn-primary'; pubBtn.textContent = 'Publicar';
-  pubBtn.onclick = function() {
+  const publishNow = function() {
     // Defensa en profundidad: nunca dejar salir un RPE/duración fuera de rango
     // hacia Supabase (los CHECK constraints de la tabla exigen RPE 1–10 y
     // duración 10–300; si esto falla ahí, llega como 400 sin feedback claro).
@@ -5166,12 +5458,58 @@ function buildCoachSession() {
       // guardado confirmado → limpiar formulario
       S.sessionTitle=''; S.sessionRPE=6; S.sessionDuration=80; S.sessionPhase='Ligero'; S.sessionDate=todayStr();
       S.alphaPhase=null; S.pullText=''; S.pushText=''; S.lowerText='';
-      S.warmUp=''; S.preSet=''; S.mainSet=''; S.mainSetFondo=''; S.coolDown=''; S.packDays=1;
-      showToast('✓ Sesión publicada', 'success');
-      renderAsync();
+      S.warmUp=''; S.preSet=''; S.mainSet=''; S.mainSetFondo=''; S.coolDown=''; S.packDays=1; S.editingFrom=null;
+      const rem = S._pendingSlotRemovals || [];
+      S._pendingSlotRemovals = null;
+      if (!rem.length) { showToast('✓ Sesión publicada', 'success'); renderAsync(); return; }
+      Promise.all(rem.map(function(r) {
+        return dbDeleteSession(r.date, r.slot).then(function(rows) { return { r: r, ok: rows !== null }; });
+      })).then(function(res) {
+        _allSessionsCache = null;
+        const kept = res.filter(function(x) { return !x.ok; });
+        if (!kept.length) showToast('✓ Publicada como entreno único', 'success');
+        else showToast('✓ Publicada. La tarde del ' + kept.map(function(x) { return formatDateLabel(x.r.date); }).join(', ') + ' se mantiene: ya tiene asistencia', 'error');
+        renderAsync();
+      });
     }).catch(function() {
       btn.disabled = false; btn.textContent = 'Publicar';
       showToast('⚠ Error de conexión', 'error');
+    });
+  };
+  pubBtn.onclick = function() {
+    const btn = this;
+    if (btn.disabled) return;
+    // Sin título ni ningún bloque escrito no hay entreno: publicarlo creaba sesiones
+    // "Sin título" vacías que luego salían como una lista de asistencia de más.
+    const hasText = function(v) { return String(v || '').trim() !== ''; };
+    if (!hasText(S.sessionTitle) && !['warmUp','preSet','mainSet','mainSetFondo','coolDown','pullText','pushText','lowerText'].some(function(k) { return hasText(S[k]); })) {
+      showToast('El entreno está vacío: escribe un título o algún bloque', 'error');
+      return;
+    }
+    const targets = sessionPublishTargets();
+    btn.disabled = true; btn.textContent = 'Comprobando…';
+    sessionPublishConflicts(targets).then(function(conf) {
+      btn.disabled = false; btn.textContent = 'Publicar';
+      if (conf === null) { showToast('⚠ No se pudo comprobar si ya hay entrenos. Reintenta', 'error'); return; }
+      if (!conf.length) { S._pendingSlotRemovals = []; publishNow.call(btn); return; }
+      const slotName = { am: 'Mañana', pm: 'Tarde', fis: 'Físico' };
+      const list = conf.map(function(r) {
+        return '<li><b>' + escapeHtml(formatDateLabel(r.date)) + '</b>' + (slotName[r.slot] ? ' · ' + slotName[r.slot] : '') + ': ' + escapeHtml(r.title || 'Sin título')
+          + (r.remove ? ' <i>(se borra: eliges entreno único)</i>' : '') + '</li>';
+      }).join('');
+      // tardes que hay que quitar después de publicar como "Única"
+      S._pendingSlotRemovals = conf.filter(function(r) { return r.remove; }).map(function(r) { return { date: r.date, slot: r.slot }; });
+      const ul = '<ul style="margin:6px 0 8px;padding-left:18px;text-align:left">' + list + '</ul>';
+      // Solo el entreno abierto con el lápiz: es una edición, aviso suave
+      if (conf.length === 1 && conf[0].editing && !conf[0].remove) {
+        showConfirm('¿Guardar los cambios?', ul + 'Se actualizará el entreno publicado.',
+          function() { publishNow.call(btn); }, { okText: 'Guardar cambios', okSafe: true });
+        return;
+      }
+      showConfirm(conf.length > 1 ? 'Ya hay ' + conf.length + ' entrenos publicados' : 'Ya hay un entreno publicado',
+        ul + 'Si publicas, ' + (conf.length > 1 ? 'se reemplazarán' : 'se reemplazará') + ' y no se podrá recuperar.',
+        function() { publishNow.call(btn); },
+        { okText: 'Reemplazar' });
     });
   };
   actions.appendChild(pubBtn);
@@ -5374,7 +5712,7 @@ function buildCoachRPE() {
         athletes.forEach(function(name) {
           const entry = dayRPEHist[name];
           const tr = document.createElement('tr');
-          const ns = name.split(' ')[0];
+          const ns = shortAthleteName(name);
           if (entry) {
             const subs = rpeSubmissions(entry);
             const slotMap2 = normDay(s.data) || {};
@@ -5687,46 +6025,84 @@ async function dbGetTeamWellness(days) {
   return map;
 }
 
-// Análisis de un nadador. Cortes orientativos (índice de Hooper + escala de la app):
-// bajo su base = 3 puntos menos que su media de 14 días, o total < 11, o alguna pregunta en 1–2.
+// Análisis de un nadador con la ventana de las últimas 72 h (hoy y los 2 días anteriores).
+// Un día malo suelto no sale en la lista (se cuenta aparte). Señales:
+//  · Cansado/Agotado (4–5) en el RPE 2 de los últimos 3 días → hablar con él.
+//  · RPE de una sesión ≥ objetivo + 2, 2 de los últimos 3 días → ajustar hoy.
+//  · Bienestar bajo su media 2 de 3 días, o sueño / músculos ≤ 2 dos de los 3 días → hablar con él.
+//    Día bajo = total ≤ su media − max(1 DE, 2 puntos), con sus check-ins de 28 días
+//    (mín. 7; si no, total ≤ 10).
+//  · Nota del RPE con agotamiento, ánimo hundido o dolor en 72 h → siempre, con la frase.
+//  · ACWR nunca saca a nadie solo: con ≥ 3 semanas de historia y ≥ 16 días con carga,
+//    un ACWR ≥ 1,5 se suma como "Carga alta" a quien ya tiene otra señal.
+// Cortes orientativos para decidir con quién hablar o qué ajustar, no para predecir lesiones.
+const WELL_DISTRESS_RE = /no puedo m[aá]s|no aguanto|no llego|muert[oa]|💀|reventad|destrozad|hech[oa] polvo|fatal|mi vida|agobi|ansiedad|llor|no me apetece nada|quiero dejar/i;
+const WELL_PAIN_RE = /duel[eo]n?|dolor|molesti|lesi[oó]n|pinchazo|tend[oó]n|tendin/i;
 function wellnessStatusA(name, acwrItem) {
   const today = todayStr();
   const hist = (DATA.teamWellHist && DATA.teamWellHist[name]) || [];
   const todayW = getDayWellness(today)[name] || hist.find(function(h) { return h.date === today; }) || null;
   const comp = wellComposite(todayW);
-  const prev = hist.filter(function(h) { return h.date !== today; }).map(wellComposite).filter(function(c) { return c != null; });
-  const base = prev.length >= 3 ? Math.round(prev.reduce(function(a, b) { return a + b; }, 0) / prev.length * 10) / 10 : null;
-  const lowItems = todayW ? WELL_QS.filter(function(q) { return todayW[q.key] != null && todayW[q.key] <= 2; }) : [];
-  const midItems = todayW ? WELL_QS.filter(function(q) { return todayW[q.key] === 3; }) : [];
-  const below = comp != null && ((base != null && comp <= base - 3) || comp < 11 || lowItems.length > 0);
-
-  // Racha de check-in: días seguidos (hasta hoy) con Sueño o Cabeza en 1–2
-  let wellStreak = 0;
   const byDate = {}; hist.forEach(function(h) { byDate[h.date] = h; });
   if (todayW) byDate[today] = todayW;
-  for (let i = 0; i < 14; i++) {
-    const w = byDate[dateOffsetA(today, -i)];
-    if (w && ((w.sleep != null && w.sleep <= 2) || (w.stress != null && w.stress <= 2))) wellStreak++; else break;
+  // Base personal: media y DE de sus check-ins de 28 días, sin los 4 últimos (los que se evalúan)
+  const recentDates = [0, 1, 2, 3].map(function(i) { return dateOffsetA(today, -i); });
+  const prev = hist.filter(function(h) { return recentDates.indexOf(h.date) === -1; }).map(wellComposite).filter(function(c) { return c != null; });
+  let base = null, sd = null;
+  if (prev.length >= 7) {
+    base = prev.reduce(function(a, b) { return a + b; }, 0) / prev.length;
+    sd = Math.sqrt(prev.reduce(function(a, b) { return a + Math.pow(b - base, 2); }, 0) / (prev.length - 1));
+    base = Math.round(base * 10) / 10;
   }
+  const cut = base != null ? base - Math.max(sd, 2) : 10;
+  const isLow = function(c) { return c != null && c <= cut; };
+  const days3 = [0, 1, 2].map(function(i) { return dateOffsetA(today, -i); });
+  const lowToday = isLow(comp) || !!(todayW && ((todayW.sleep != null && todayW.sleep <= 2) || (todayW.soreness != null && todayW.soreness <= 2)));
+  const lowDays = days3.filter(function(d) { return isLow(wellComposite(byDate[d])); }).length;
+  const lowSustained = lowDays >= 2;
+  const lowItems = todayW ? WELL_QS.filter(function(q) { return todayW[q.key] != null && todayW[q.key] <= 2; }) : [];
+  const midItems = todayW ? WELL_QS.filter(function(q) { return todayW[q.key] === 3; }) : [];
+  // Sueño o músculos en 1–2: cuenta si se repite 2 de los 3 días (un día malo suelto no sale)
+  const keyLowDays = days3.filter(function(d) { const x = byDate[d]; return x && ((x.sleep != null && x.sleep <= 2) || (x.soreness != null && x.soreness <= 2)); }).length;
+  const keyLow = keyLowDays >= 2 ? WELL_QS.filter(function(q) { return (q.key === 'sleep' || q.key === 'soreness') && todayW && todayW[q.key] != null && todayW[q.key] <= 2; }) : [];
+  const keyLowSustained = keyLowDays >= 2;
 
-  // RPE y cansancio: último registro y días seguidos marcando Cansado/Agotado (4–5)
+  // RPE de las últimas 72 h: cansancio, RPE por encima del objetivo y notas
   const rpeHist = DATA.athleteHist[name] || [];
   const last = rpeHist.length ? rpeHist[rpeHist.length - 1] : null;
-  const fatByDate = {};
-  rpeHist.forEach(function(h) { if (h.fatigue != null) fatByDate[h.date] = Math.max(fatByDate[h.date] || 0, h.fatigue); });
-  const fatDates = Object.keys(fatByDate).sort().reverse();
-  let tiredStreak = 0;
-  for (let i = 0; i < fatDates.length; i++) { if (fatByDate[fatDates[i]] >= 4) tiredStreak++; else break; }
-
-  const acwrNum = acwrItem ? (typeof acwrItem.raw === 'number' ? acwrItem.raw : acwrItem.raw && acwrItem.raw.value) : null;
-  const acwrHigh = !!(acwrItem && (acwrItem.info.label === 'Riesgo' || acwrItem.info.label === 'Atención'));
+  const in3 = rpeHist.filter(function(h) { return days3.indexOf(h.date) !== -1; });
+  const tiredDays = {}; const overDays = {};
+  in3.forEach(function(h) {
+    if (h.fatigue != null && h.fatigue >= 4) tiredDays[h.date] = true;
+    const day = DATA.sessions && DATA.sessions[h.date];
+    const sess = day && day[h.slot];
+    const target = sess && sess.targetRPE != null ? Number(sess.targetRPE) : null;
+    if (target != null && h.rpe != null && h.rpe >= target + 2) overDays[h.date] = true;
+  });
+  const tiredStreak = Object.keys(tiredDays).length;
   const tired = tiredStreak >= 2;
-  const adjust = acwrHigh && (below || tired);
-  const talk = wellStreak >= 3 || tiredStreak >= 3;
-  return { name: name, todayW: todayW, comp: comp, base: base, lowItems: lowItems, midItems: midItems, below: below,
-    wellStreak: wellStreak, last: last, lastFat: last ? (FATIGUE.find(function(f) { return f.v === last.fatigue; }) || null) : null,
-    tiredStreak: tiredStreak, tired: tired, acwrItem: acwrItem, acwrNum: acwrNum, acwrHigh: acwrHigh, adjust: adjust, talk: talk,
-    flagged: below || tired || talk, hist: hist };
+  const overCount = Object.keys(overDays).length;
+  const rpeOver = overCount >= 2;
+  const notes = in3.filter(function(h) { return h.note && h.note.trim(); });
+  const distressNote = notes.filter(function(h) { return WELL_DISTRESS_RE.test(h.note); }).pop() || null;
+  const painNote = notes.filter(function(h) { return WELL_PAIN_RE.test(h.note); }).pop() || null;
+  const painRepeated = !!painNote;
+
+  // ACWR: solo apoyo, nunca señal propia, y solo con historia suficiente
+  const acwrNum = acwrItem ? (typeof acwrItem.raw === 'number' ? acwrItem.raw : acwrItem.raw && acwrItem.raw.value) : null;
+  const calibrated = !!(acwrItem && acwrItem.info && !acwrItem.info.calibrating);
+  const loadDates = Object.keys(rpeHist.reduce(function(m, h) { m[h.date] = 1; return m; }, {})).sort();
+  const reliable = calibrated && loadDates.length >= 16 && loadDates[0] <= dateOffsetA(today, -21);
+  const talk = tired || lowSustained || keyLowSustained || !!distressNote || painRepeated;
+  const acwrHigh = reliable && acwrNum != null && acwrNum >= 1.5 && (talk || rpeOver);
+  const adjust = rpeOver || acwrHigh;
+  return { name: name, todayW: todayW, comp: comp, base: base, sd: sd, lowItems: lowItems, midItems: midItems, keyLow: keyLow,
+    below: lowToday, lowToday: lowToday, lowDays: lowDays, lowSustained: lowSustained,
+    last: last, lastFat: last ? (FATIGUE.find(function(f) { return f.v === last.fatigue; }) || null) : null,
+    tiredStreak: tiredStreak, tired: tired, rpeOver: rpeOver, overCount: overCount,
+    distressNote: distressNote, painRepeated: painRepeated, painNote: painNote,
+    acwrItem: acwrItem, acwrNum: acwrNum, acwrHigh: acwrHigh, acwrLimit: false, acwrNear: false, acwrReliable: reliable,
+    adjust: adjust, talk: talk, flagged: adjust || talk, hist: hist };
 }
 
 function buildWellnessBlockA(acwrData) {
@@ -5736,20 +6112,20 @@ function buildWellnessBlockA(acwrData) {
   const all = athletes.map(function(n) { return wellnessStatusA(n, byName[n]); });
   const withCheckin = all.filter(function(s) { return s.comp != null; }).length;
   const flagged = all.filter(function(s) { return s.flagged; }).sort(function(a, b) {
-    const pa = a.adjust ? 0 : a.talk ? 1 : 2, pb = b.adjust ? 0 : b.talk ? 1 : 2;
+    const pa = a.adjust ? 0 : a.distressNote ? 1 : a.talk ? 2 : 3, pb = b.adjust ? 0 : b.distressNote ? 1 : b.talk ? 2 : 3;
     if (pa !== pb) return pa - pb;
     return (a.comp == null ? 99 : a.comp) - (b.comp == null ? 99 : b.comp);
   });
   const nAdjust = flagged.filter(function(s) { return s.adjust; }).length;
-  const nBelow = all.filter(function(s) { return s.below; }).length;
+  const nOneDay = all.filter(function(s) { return s.lowToday && !s.flagged; }).length;
 
   const head = document.createElement('div'); head.className = 'bw-head';
-  head.innerHTML = '<div class="section-title">Bienestar hoy</div><small>vs. su media de 14 días</small>';
+  head.innerHTML = '<div class="section-title">Bienestar hoy</div><small>últimas 72 h · solo lo que se repite o preocupa</small>';
   wrap.appendChild(head);
   const card = document.createElement('div'); card.className = 'card bw-card';
   let html = '<div class="bw-sum">'
     + '<span>Check-in<b>' + withCheckin + '/' + athletes.length + '</b></span>'
-    + '<span>Bajo su base<b style="color:' + (nBelow ? 'var(--orange)' : 'var(--text)') + '">' + nBelow + '</b></span>'
+    + '<span>A vigilar<b style="color:' + (flagged.length ? 'var(--orange)' : 'var(--text)') + '">' + flagged.length + '</b></span>'
     + '<span>Ajustar hoy<b style="color:' + (nAdjust ? 'var(--red)' : 'var(--text)') + '">' + nAdjust + '</b></span></div>';
   const ink = function(label) { return { 'Riesgo': '#e5484d', 'Atención': '#d97706', 'Óptimo': '#0f9d58', 'Subcarga': '#0a84ff', 'Calibrando': '#7d93a8' }[label] || 'var(--text)'; };
   flagged.forEach(function(s) {
@@ -5764,11 +6140,15 @@ function buildWellnessBlockA(acwrData) {
       + '<div>Estado<b' + (s.lastFat ? ' style="color:' + s.lastFat.color + '"' : '') + '>' + (s.lastFat ? s.lastFat.label : '—') + '</b></div></div>';
     let chips = '';
     s.lowItems.forEach(function(q) { chips += '<span class="bw-chip low">' + q.lbl + ' ' + s.todayW[q.key] + '</span>'; });
-    if (s.below) s.midItems.forEach(function(q) { chips += '<span class="bw-chip mid">' + q.lbl + ' ' + s.todayW[q.key] + '</span>'; });
     if (s.adjust) chips += '<span class="bw-flag adj">Ajustar hoy</span>';
-    if (s.tired) chips += '<span class="bw-flag talk" style="background:' + (s.tiredStreak >= 3 ? '#5e5ce6' : 'var(--orange)') + '">Cansado ' + s.tiredStreak + ' días seguidos</span>';
-    if (s.wellStreak >= 3) chips += '<span class="bw-flag talk">' + s.wellStreak + ' días mal en sueño o cabeza</span>';
+    if (s.rpeOver) chips += '<span class="bw-flag adj" style="background:var(--orange)">RPE por encima del objetivo ' + s.overCount + ' de 3 días</span>';
+    if (s.acwrHigh) chips += '<span class="bw-flag adj" style="background:#8e3b46">Carga alta (ACWR ' + String(Number(s.acwrNum).toFixed(2)).replace('.', ',') + ')</span>';
+    if (s.lowSustained) chips += '<span class="bw-flag talk" style="background:var(--orange)">Bajo su media ' + s.lowDays + ' de 3 días</span>';
+    if (s.tired) chips += '<span class="bw-flag talk" style="background:' + (s.tiredStreak >= 3 ? '#5e5ce6' : 'var(--orange)') + '">Cansado ' + s.tiredStreak + ' de 3 días</span>';
+    if (s.painRepeated) chips += '<span class="bw-flag talk" style="background:#b4532a">Menciona dolor</span>';
     if (s.talk) chips += '<span class="bw-flag talk">Hablar con él</span>';
+    const q = s.distressNote || s.painNote;
+    if (q) chips += '<div class="bw-quote">«' + escapeHtml(q.note.trim().slice(0, 110)) + '» <span>' + escapeHtml(formatDateLabel(q.date)) + '</span></div>';
     html += '<div class="bw-row">' + scoreHtml + '<div class="bw-main"><div class="bw-name">' + escapeHtml(s.name) + '</div><div class="bw-base">' + baseTxt + '</div>'
       + metrics + (chips ? '<div class="bw-chips">' + chips + '</div>' : '') + '</div>'
       + '<button class="rpe-more" data-bw-ath="' + escapeHtml(s.name) + '" aria-label="Detalle de ' + escapeHtml(s.name) + '"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button></div>';
@@ -5779,6 +6159,7 @@ function buildWellnessBlockA(acwrData) {
   } else if (okCount > 0) {
     html += '<div class="bw-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Los otros ' + okCount + ' están en su línea</div>';
   }
+  if (nOneDay) html += '<div class="bw-oneday">' + nOneDay + (nOneDay === 1 ? ' nadador tiene' : ' nadadores tienen') + ' hoy un día bajo suelto: no sale en la lista hasta que se repita.</div>';
   card.innerHTML = html;
   wrap.appendChild(card);
   const disc = document.createElement('div'); disc.className = 'bw-disc';
@@ -5856,7 +6237,7 @@ function buildCoachSquad() {
   // ── Cargar historial de todos + asistencia (una sola vez por sesión de la app) ──
   if (!DATA.allHistLoaded || !DATA.attendancePct || !DATA.attendanceSum || !DATA.teamWellHist) {
     Promise.all([
-      DATA.teamWellHist ? Promise.resolve() : dbGetTeamWellness(14).then(function(m) { DATA.teamWellHist = m; }).catch(function() { DATA.teamWellHist = {}; }),
+      DATA.teamWellHist ? Promise.resolve() : dbGetTeamWellness(28).then(function(m) { DATA.teamWellHist = m; }).catch(function() { DATA.teamWellHist = {}; }),
       DATA.allHistLoaded ? Promise.resolve() : dbGetAllAthleteHist().then(function(map) {
         Object.keys(map).forEach(function(name) { DATA.athleteHist[name] = map[name]; });
         DATA.allHistLoaded = true;
@@ -5954,7 +6335,7 @@ function buildCoachSquad() {
   if (enRiesgo.length > 0) {
     const alert = document.createElement('div'); alert.className = 'acwr-risk-alert';
     alert.style.cssText = 'background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.4);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:0.78rem;color:#e74c3c;font-weight:700';
-    alert.textContent = '' + enRiesgo.length + ' en zona de riesgo (>1.5): ' + enRiesgo.map(function(x){ return x.name.split(' ')[0]; }).join(', ');
+    alert.textContent = '' + enRiesgo.length + ' en zona de riesgo (>1.5): ' + enRiesgo.map(function(x){ return shortAthleteName(x.name); }).join(', ');
     d.appendChild(alert);
   }
 
@@ -6003,7 +6384,7 @@ function buildCoachSquad() {
     card.setAttribute('role', 'button');
     card.setAttribute('aria-expanded', S.acwrOpen[x.name] ? 'true' : 'false');
     card.innerHTML =
-      '<div class="nm">' + escapeHtml(x.name.split(' ')[0]) + '</div>' +
+      '<div class="nm">' + escapeHtml(shortAthleteName(x.name)) + '</div>' +
       '<div class="v" style="color:' + ink + '">' + Number(num).toFixed(2) + (isCal ? '<small>*</small>' : '') + (est ? '<small>≈</small>' : '') + '</div>' +
       '<div class="zl" style="color:' + ink + '">' + (isCal ? 'Provisional' : x.info.label) + '</div>' +
       '<div class="zb' + (isCal ? ' cal' : '') + '"><i style="left:' + barPos(num).toFixed(1) + '%"></i></div>' +
@@ -6557,6 +6938,7 @@ function buildCoachTeam() {
     b.onclick = function() { S.teamView = key; render(); };
     return b;
   };
+  d.appendChild(buildTeamMessageComposer());
   toggle.append(mkToggleBtn('Nadadores', 'nadadores'), mkToggleBtn('Entrenadores', 'entrenadores'));
   d.appendChild(toggle);
 
@@ -6574,11 +6956,15 @@ function buildCoachTeam() {
     const val = inp2 ? inp2.value.trim().toUpperCase() : '';
     if (!val) return;
     if (getAthletes().includes(val)) { alert('Ya hay un nadador activo con ese nombre.'); return; }
+    const ps = S.planStatus;
+    if (ps && ps.athlete_limit && getAthletes().length >= ps.athlete_limit) { alert(athleteLimitMsg(ps.athlete_limit)); return; }
     dbAddAthlete(val).then(function(r) {
       if (r.reason === 'duplicate_active') alert('Ya existe un nadador con ese nombre.');
       else if (r.reason === 'reactivated') alert(val + ' estaba desactivado — se reactivó junto con su historial.');
+      else if (r.reason === 'limit') alert(athleteLimitMsg(S.planStatus ? S.planStatus.athlete_limit : 25));
       else if (r.reason === 'error') alert('No se pudo agregar el nadador. Probá de nuevo.');
-      if (inp2) inp2.value = '';
+      if (r.reason !== 'readonly' && inp2) inp2.value = '';
+      if (r.ok) loadPlanStatus();
       renderAsync();
     });
   };
@@ -6964,6 +7350,7 @@ function buildCoachHistorial() {
       S.mainSetFondo = slotData.mainSetFondo || '';
       S.coolDown = slotData.coolDown || '';
       S.sessionSlot = slotKey; // ← turno real, no forzado a 'am'
+      S.editingFrom = { date: s.date, slot: slotKey }; // reemplazarlo no necesita aviso
       S.packDays = 1;
       S.tab = 0;
       render();
@@ -6995,17 +7382,20 @@ function buildCoachHistorial() {
     delBtn.onclick = function(ev) {
       ev.stopPropagation();
       const label = DAYS_ES[dt.getDay()] + ' ' + dt.getDate() + ' ' + MONTHS_ES[dt.getMonth()].substring(0,3);
-      showConfirm('¿Borrar el entreno del ' + label + '?', 'Se eliminará la sesión completa (mañana y tarde si las hay). No se puede deshacer.', function() {
+      const many = hdrSlots.length > 1;
+      const names = hdrSlots.map(function(sl){ return ({ am: 'mañana', pm: 'tarde', fis: 'físico' })[sl.slot]; }).join(', ');
+      showConfirm(many ? '¿Borrar todo el ' + label + '?' : '¿Borrar el entreno del ' + label + '?',
+        many ? 'Se borran los ' + hdrSlots.length + ' turnos (' + names + '). Para borrar solo uno, abre el día y usa la papelera de ese turno. No se puede deshacer.'
+             : 'No se puede deshacer.', function() {
         delBtn.disabled = true; delBtn.innerHTML = '…';
-        dbDeleteSession(s.date).then(function() {
+        dbDeleteSession(s.date).then(function(rows) {
+          if (rows === null) { showToast(sessionDeleteError(), 'error'); render(); return; }
           delete S.histSessionOpen[s.date];
-          // quitar de la caché en memoria sin refetch (preserva meses cargados)
-          _allSessionsCache = (_allSessionsCache || []).filter(function(x){ return x.date !== s.date; });
-          DATA.allSessions = _allSessionsCache;
-          DATA.sessions = {}; _allSessionsCache.forEach(function(x){ DATA.sessions[x.date] = x.data; });
+          dropSessionFromCache(s.date);
+          showToast(many ? '✓ Día borrado' : '✓ Entreno borrado', 'success');
           render();
         });
-      });
+      }, { okText: many ? 'Borrar todo' : 'Borrar' });
     };
 
     const actions = document.createElement('div');
@@ -7034,7 +7424,31 @@ function buildCoachHistorial() {
           slotEditBtn.title = 'Editar ' + (slotObj.slot === 'am' ? 'mañana' : (slotObj.slot === 'fis' ? 'físico' : 'tarde'));
           slotEditBtn.style.cssText = 'min-width:28px;height:28px;font-size:0.7rem;margin-right:0;flex-shrink:0;';
           slotEditBtn.onclick = function(ev) { ev.stopPropagation(); loadSlotForEdit(sess2, slotObj.slot); };
-          shRow.append(shLbl, slotEditBtn);
+          const slotName = slotObj.slot === 'am' ? 'mañana' : (slotObj.slot === 'fis' ? 'físico' : 'tarde');
+          const slotDelBtn = document.createElement('button');
+          slotDelBtn.className = 'sess-del-btn';
+          slotDelBtn.innerHTML = delBtn.innerHTML;
+          slotDelBtn.title = 'Borrar ' + slotName;
+          slotDelBtn.setAttribute('aria-label', 'Borrar ' + slotName);
+          slotDelBtn.style.cssText = 'min-width:28px;height:28px;font-size:0.7rem;margin-right:0;flex-shrink:0;';
+          slotDelBtn.onclick = function(ev) {
+            ev.stopPropagation();
+            const dl = DAYS_ES[dt.getDay()] + ' ' + dt.getDate() + ' ' + MONTHS_ES[dt.getMonth()].substring(0,3);
+            showConfirm('¿Borrar ' + slotName + ' del ' + dl + '?',
+              '<b>' + escapeHtml(sess2.title || 'Sin título') + '</b><br>Los otros turnos de ese día se mantienen. No se puede deshacer.', function() {
+              slotDelBtn.disabled = true;
+              dbDeleteSession(s.date, slotObj.slot).then(function(rows) {
+                if (rows === null) { showToast(sessionDeleteError(), 'error'); render(); return; }
+                dropSessionFromCache(s.date, slotObj.slot);
+                showToast('✓ ' + slotName.charAt(0).toUpperCase() + slotName.slice(1) + (slotObj.slot === 'fis' ? ' borrado' : ' borrada'), 'success');
+                render();
+              });
+            });
+          };
+          const slotBtns = document.createElement('span');
+          slotBtns.style.cssText = 'display:flex;gap:6px;';
+          slotBtns.append(slotEditBtn, slotDelBtn);
+          shRow.append(shLbl, slotBtns);
           body.appendChild(shRow);
         }
         if (sess2.phase === 'Fuerza') {
@@ -7248,6 +7662,11 @@ function buildWellnessCheckin() {
 // ============================================================
 // DISEÑO A · piezas del boceto (inicio atleta y resumen de carga)
 // ============================================================
+// "DIAZ QUERALT" → "DIAZ Q.": apellido + inicial del nombre, para no confundir apellidos repetidos
+function shortAthleteName(name) {
+  const p = String(name || '').trim().split(/\s+/);
+  return p.length > 1 ? p[0] + ' ' + p[p.length - 1].charAt(0) + '.' : (p[0] || '');
+}
 function fmtMilesA(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
 function dateOffsetA(base, days) {
   const d = dateObj(base); d.setDate(d.getDate() + days);
@@ -7255,6 +7674,23 @@ function dateOffsetA(base, days) {
 }
 function zoneColorA(label) {
   return { 'Riesgo': '#e5484d', 'Atención': '#d97706', 'Óptimo': '#0f9d58', 'Subcarga': '#0a84ff', 'Calibrando': '#7d93a8' }[label] || '#7d93a8';
+}
+
+// Resumen de una línea de un bloque. Si empieza con series agrupadas ("2x{"), en vez de
+// enseñar la llave se muestra la repetición y la primera línea de dentro: "2× (4x400 …)".
+function heroBlockSummary(text) {
+  const lines = String(text || '').split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
+  const reps = [];
+  let i = 0;
+  for (; i < lines.length; i++) {
+    const m = lines[i].match(/^(\d+)\s*[x×]\s*\{$/i);
+    if (m) { reps.push(m[1]); continue; }
+    if (lines[i] === '{' || lines[i] === '}') continue;
+    break;
+  }
+  const inner = (lines[i] || '').replace(/[{}]/g, '').trim();
+  if (!reps.length) return inner;
+  return reps.map(function(r) { return r + '×'; }).join(' ') + ' (' + inner + (lines.length > i + 1 ? ' …' : '') + ')';
 }
 
 // Tarjeta protagonista: la sesión de hoy con sus metros y bloques
@@ -7286,7 +7722,7 @@ function buildTodayHeroA() {
     .filter(function(b) { return parseMeters(b[1]) > 0; });
   if (blocks.length) {
     html += '<div class="hero-blocks">' + blocks.map(function(b) {
-      const first = String(b[1]).split('\n').map(function(l) { return l.trim(); }).filter(Boolean)[0] || '';
+      const first = heroBlockSummary(b[1]);
       return '<div class="hero-blk"><span>' + b[0] + (first ? ' · ' + escapeHtml(first) : '') + '</span><b>' + fmtMilesA(parseMeters(b[1])) + ' m</b></div>';
     }).join('') + '</div>';
   }
@@ -7383,6 +7819,105 @@ function buildSquadSummaryA(acwrData) {
   return wrap;
 }
 
+// ============================================================
+// MENSAJE AL GRUPO (tabla team_messages; la base pone el coach_id del que escribe)
+// ============================================================
+async function dbGetTeamMessages() {
+  const rows = await sbFetch('team_messages?select=id,text,created_at&order=created_at.desc&limit=10');
+  return rows || [];
+}
+async function dbPostTeamMessage(text) {
+  const rows = await sbFetch('team_messages', { method: 'POST', body: JSON.stringify({ text: text }) });
+  return !!rows;
+}
+async function dbDeleteTeamMessage(id) {
+  await sbFetch('team_messages?id=eq.' + encodeURIComponent(id), { method: 'DELETE', prefer: 'return=minimal' });
+}
+function teamMsgWhen(iso) {
+  const d = new Date(iso), now = new Date();
+  const mins = Math.round((now - d) / 60000);
+  if (mins < 1) return 'ahora';
+  if (mins < 60) return 'hace ' + mins + ' min';
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24 && d.getDate() === now.getDate()) return 'hace ' + hrs + ' h';
+  return d.getDate() + ' ' + MONTHS_ES[d.getMonth()].slice(0, 3).toLowerCase() + ' · ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+// Último mensaje visible para el nadador: los de los últimos 7 días
+function latestTeamMessage() {
+  const m = (DATA.teamMessages || [])[0];
+  if (!m) return null;
+  return (Date.now() - new Date(m.created_at).getTime()) <= 7 * 86400000 ? m : null;
+}
+function teamMsgSeen() { try { return localStorage.getItem('ondrift_teammsg_seen') || ''; } catch (e) { return ''; } }
+function teamMsgUnseen() { const m = latestTeamMessage(); return !!(m && m.created_at > teamMsgSeen()); }
+
+// Nadador: tarjeta arriba en Inicio
+function buildTeamMessageCard() {
+  const m = latestTeamMessage();
+  if (!m) return null;
+  const unseen = teamMsgUnseen();
+  const card = document.createElement('div'); card.className = 'card tm-card';
+  card.innerHTML = '<div class="tm-eb">Mensaje de tu entrenador' + (unseen ? '<span class="tm-new">Nuevo</span>' : '') + '<span class="tm-when">' + teamMsgWhen(m.created_at) + '</span></div>'
+    + '<div class="tm-text">' + escapeHtml(m.text) + '</div>';
+  if (unseen) {
+    const ok = document.createElement('button'); ok.className = 'btn btn-secondary btn-sm tm-ok'; ok.textContent = 'Entendido';
+    ok.onclick = function() { try { localStorage.setItem('ondrift_teammsg_seen', m.created_at); } catch (e) {} render(); };
+    card.appendChild(ok);
+  }
+  return card;
+}
+
+// Entrenador: escribir, ver los últimos y borrar
+function buildTeamMessageComposer() {
+  const card = document.createElement('div'); card.className = 'card tm-compose';
+  card.innerHTML = '<div class="card-title">Mensaje al grupo</div><div class="card-sub">Les aparece a todos tus nadadores arriba en Inicio, con un punto rojo hasta que lo leen.</div>';
+  const ta = document.createElement('textarea'); ta.maxLength = 500; ta.placeholder = 'Ej: ¡Gran semana, equipo! Mañana descanso activo. A por el campeonato.';
+  ta.value = S.teamMsgDraft || '';
+  const count = document.createElement('div'); count.className = 'tm-count';
+  const upd = function() { S.teamMsgDraft = ta.value; count.textContent = ta.value.length + ' / 500'; };
+  ta.oninput = upd; upd();
+  const send = document.createElement('button'); send.className = 'btn btn-primary'; send.style.marginTop = '8px'; send.textContent = 'Enviar a todo el grupo';
+  send.onclick = function() {
+    const text = ta.value.trim();
+    if (!text) { showToast('Escribe el mensaje antes de enviarlo.', 'error'); return; }
+    showConfirm('¿Enviar a todo el grupo?', 'Lo verán todos tus nadadores en su Inicio.', async function() {
+      send.disabled = true; send.textContent = 'Enviando…';
+      const ok = await dbPostTeamMessage(text);
+      if (ok) {
+        S.teamMsgDraft = '';
+        DATA.teamMessages = await dbGetTeamMessages();
+        showToast('Mensaje enviado al grupo');
+      } else {
+        showToast('No se pudo enviar. Revisa la conexión e inténtalo de nuevo.', 'error');
+      }
+      render();
+    }, { okText: 'Enviar', okSafe: true });
+  };
+  card.append(ta, count, send);
+  const msgs = DATA.teamMessages || [];
+  if (msgs.length) {
+    const list = document.createElement('div'); list.className = 'tm-list';
+    list.innerHTML = '<div class="field-label" style="margin-top:0">Últimos mensajes</div>';
+    msgs.slice(0, 5).forEach(function(m) {
+      const it = document.createElement('div'); it.className = 'tm-item';
+      it.innerHTML = '<div class="tm-body"><div class="tm-date">' + teamMsgWhen(m.created_at) + '</div><div class="tm-t">' + escapeHtml(m.text) + '</div></div>';
+      const del = document.createElement('button'); del.className = 'tm-del'; del.setAttribute('aria-label', 'Borrar mensaje');
+      del.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg>';
+      del.onclick = function() {
+        showConfirm('¿Borrar este mensaje?', 'Dejará de verse en el Inicio de tus nadadores.', async function() {
+          await dbDeleteTeamMessage(m.id);
+          DATA.teamMessages = await dbGetTeamMessages();
+          render();
+        }, { okText: 'Borrar' });
+      };
+      it.appendChild(del);
+      list.appendChild(it);
+    });
+    card.appendChild(list);
+  }
+  return card;
+}
+
 function buildAthleteInicio() {
   const d = document.createElement('div');
   const today = new Date();
@@ -7429,6 +7964,7 @@ function buildAthleteInicio() {
     '<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,rgba(41,128,185,0.8),rgba(52,152,219,0.6));border:1.5px solid rgba(255,255,255,0.8);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.9rem;color:#fff;box-shadow:0 2px 12px rgba(41,128,185,0.4)">' + initials + '</div>';
   // Diseño A: el saludo y el avatar ya están en la cabecera global
   // d.appendChild(hdr);
+  const tmCard = buildTeamMessageCard(); if (tmCard) d.appendChild(tmCard);
   d.appendChild(buildTodayHeroA());
   d.appendChild(buildWeekStripA());
 
@@ -8590,29 +9126,65 @@ let _xlsxLoading = null;
 function ensureXLSX() {
   if (window.XLSX) return Promise.resolve();
   if (_xlsxLoading) return _xlsxLoading;
-  _xlsxLoading = new Promise(function(resolve, reject) {
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-    const timer = setTimeout(function() { s.onload = s.onerror = null; reject(new Error('timeout')); }, 12000);
-    s.onload = function() { clearTimeout(timer); window.XLSX ? resolve() : reject(new Error('sin XLSX')); };
-    s.onerror = function() { clearTimeout(timer); reject(new Error('no cargó')); };
-    document.head.appendChild(s);
-  }).then(function() { _xlsxLoading = null; }, function(e) { _xlsxLoading = null; throw e; });
+  // Primero la versión con formato (negritas, colores); si no llega, la normal (sale sin formato)
+  const load = function(src) {
+    return new Promise(function(resolve, reject) {
+      const s = document.createElement('script');
+      s.src = src;
+      const timer = setTimeout(function() { s.onload = s.onerror = null; reject(new Error('timeout')); }, 12000);
+      s.onload = function() { clearTimeout(timer); window.XLSX ? resolve() : reject(new Error('sin XLSX')); };
+      s.onerror = function() { clearTimeout(timer); reject(new Error('no cargó')); };
+      document.head.appendChild(s);
+    });
+  };
+  _xlsxLoading = load('https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js').catch(function() { return load('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'); }).then(function() { _xlsxLoading = null; }, function(e) { _xlsxLoading = null; throw e; });
   return _xlsxLoading;
 }
 
-// Excel de inscripciones: una fila por nadador, una columna por prueba (✓), con año y total
+// Excel de inscripciones: título, una fila por nadador, una columna por prueba con inscritos (X), año y total
 function inscBuildWorkbook(comp, athletes, byAthlete, rows) {
-  const header = ['Nadador', 'Año'].concat(DATA.events.map(function(e){ return e.code; }), ['Nº']);
+  const used = DATA.events.filter(function(e){ return rows.some(function(i){ return i.event_code === e.code; }); });
+  const evs = used.length ? used : DATA.events;
+  const nCols = evs.length + 3;
+  const when = comp.start ? (formatDateLabel(comp.start) + (comp.end && comp.end !== comp.start ? ' – ' + formatDateLabel(comp.end) : '')) : '';
+  const title = [comp.name].concat(new Array(nCols - 1).fill(''));
+  const sub = [[when, comp.location].filter(Boolean).join(' · ')].concat(new Array(nCols - 1).fill(''));
+  const header = ['Nadador', 'Año'].concat(evs.map(function(e){ return e.code; }), ['Total']);
   const body = athletes.map(function(a){
-    const evs = byAthlete[a.id] || [];
+    const mine = byAthlete[a.id] || [];
     return [a.name, a.birth_date ? Number(String(a.birth_date).slice(0, 4)) : '']
-      .concat(DATA.events.map(function(e){ return evs.indexOf(e.code) !== -1 ? '✓' : ''; }), [evs.length || '']);
+      .concat(evs.map(function(e){ return mine.indexOf(e.code) !== -1 ? 'X' : ''; }), [mine.length || '']);
   });
-  const foot = ['TOTAL', ''].concat(DATA.events.map(function(e){ return rows.filter(function(i){ return i.event_code === e.code; }).length; }), [rows.length]);
-  const ws = XLSX.utils.aoa_to_sheet([header].concat(body, [foot]));
-  // Nombre ancho, año y pruebas estrechas
-  ws['!cols'] = [{ wch: 24 }, { wch: 6 }].concat(DATA.events.map(function(){ return { wch: 7 }; }), [{ wch: 5 }]);
+  const foot = ['TOTAL', ''].concat(evs.map(function(e){ return rows.filter(function(i){ return i.event_code === e.code; }).length; }), [rows.length]);
+  const ws = XLSX.utils.aoa_to_sheet([title, sub, [], header].concat(body, [foot]));
+  ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: nCols - 1 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: nCols - 1 } }];
+  ws['!cols'] = [{ wch: 28 }, { wch: 7 }].concat(evs.map(function(){ return { wch: 8 }; }), [{ wch: 7 }]);
+  ws['!rows'] = [{ hpt: 24 }, { hpt: 16 }, { hpt: 8 }, { hpt: 30 }];
+  // Formato (lo usa la librería con estilos; la normal lo ignora)
+  const line = { style: 'thin', color: { rgb: 'C9D6E3' } };
+  const box = { top: line, bottom: line, left: line, right: line };
+  const set = function(r, c, s) { const ref = XLSX.utils.encode_cell({ r: r, c: c }); if (!ws[ref]) ws[ref] = { t: 's', v: '' }; ws[ref].s = s; };
+  set(0, 0, { font: { bold: true, sz: 16, color: { rgb: '0B2236' } } });
+  set(1, 0, { font: { sz: 11, color: { rgb: '5B6B7B' } } });
+  for (let c = 0; c < nCols; c++) {
+    set(3, c, { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '1F6FD1' } }, border: box,
+      alignment: { horizontal: c === 0 ? 'left' : 'center', vertical: 'center', wrapText: true } });
+  }
+  body.forEach(function(row, i) {
+    const r = 4 + i;
+    const zebra = i % 2 ? { fill: { fgColor: { rgb: 'F2F7FC' } } } : {};
+    for (let c = 0; c < nCols; c++) {
+      const isMark = c >= 2 && c < nCols - 1;
+      set(r, c, Object.assign({ border: box, alignment: { horizontal: c === 0 ? 'left' : 'center', vertical: 'center' } }, zebra,
+        isMark ? { font: { bold: true, sz: 12, color: { rgb: '0B2236' } } } : c === nCols - 1 ? { font: { bold: true } } : {}));
+    }
+  });
+  const fr = 4 + body.length;
+  const top = { style: 'medium', color: { rgb: '1F6FD1' } };
+  for (let c = 0; c < nCols; c++) {
+    set(fr, c, { font: { bold: true }, fill: { fgColor: { rgb: 'E3EEFA' } }, border: { top: top, bottom: line, left: line, right: line },
+      alignment: { horizontal: c === 0 ? 'left' : 'center', vertical: 'center' } });
+  }
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Inscripciones');
   return wb;
@@ -8622,7 +9194,7 @@ function inscFileName(comp) {
 }
 function buildInscShareCard(comp, athletes, byAthlete, rows) {
   const card = document.createElement('div'); card.className = 'card insc-share';
-  card.innerHTML = '<div class="t">Enviar inscripciones</div><div class="s">Excel con una fila por nadador y sus pruebas marcadas</div>';
+  card.innerHTML = '<div class="t">Enviar inscripciones</div><div class="s">Excel con una fila por nadador y sus pruebas marcadas con X</div>';
   const row = document.createElement('div'); row.className = 'row';
   const share = document.createElement('button'); share.className = 'share'; share.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6h14v-6"/></svg>Compartir';
   const dl = document.createElement('button'); dl.className = 'dl'; dl.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 19h14"/></svg>Descargar';
@@ -8673,7 +9245,7 @@ function buildCommentSheet() {
   const title = document.createElement('div'); title.className='sheet-title';
   const athleteFirst = S.commentAthlete ? S.commentAthlete.split(' ')[0] : '';
   const dateLabel = dateKey !== todayStr() ? ' <span style="font-size:0.75rem;color:var(--text2);font-weight:normal">(' + formatDateLabel(dateKey) + ')</span>' : '';
-  title.innerHTML = 'Mensaje para <strong>' + escapeHtml(athleteFirst) + '</strong>' + dateLabel;
+  title.innerHTML = '<span>Mensaje para <strong>' + escapeHtml(athleteFirst) + '</strong>' + dateLabel + '</span>';
   title.appendChild(closeBtn);
 
   const ta = document.createElement('textarea');
@@ -8704,7 +9276,7 @@ function buildResultsSheet() {
   closeBtn.onclick = function() { S.viewResultsCompId = null; render(); };
 
   const title = document.createElement('div'); title.className = 'sheet-title';
-  title.innerHTML = 'Encuestas — <strong>' + (comp ? escapeHtml(comp.name) : '') + '</strong>';
+  title.innerHTML = '<span>Encuestas — <strong>' + (comp ? escapeHtml(comp.name) : '') + '</strong></span>';
   title.appendChild(closeBtn);
   sheet.appendChild(title);
 
