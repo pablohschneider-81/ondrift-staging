@@ -6265,7 +6265,7 @@ function buildWellnessBlockA(acwrData) {
   const all = athletes.map(function(n) { return wellnessStatusA(n, byName[n]); });
   const withCheckin = all.filter(function(s) { return s.comp != null; }).length;
   const flagged = all.filter(function(s) { return s.flagged; }).sort(function(a, b) {
-    const pa = a.adjust ? 0 : a.distressNote ? 1 : a.talk ? 2 : 3, pb = b.adjust ? 0 : b.distressNote ? 1 : b.talk ? 2 : 3;
+    const pr = function(x) { return x.painNote || x.adjust ? 0 : x.exhausted || x.distressNote || x.onesSustained ? 1 : 2; }; const pa = pr(a), pb = pr(b);  // rojo, naranja, azul
     if (pa !== pb) return pa - pb;
     return (a.comp == null ? 99 : a.comp) - (b.comp == null ? 99 : b.comp);
   });
@@ -6298,15 +6298,31 @@ function buildWellnessBlockA(acwrData) {
       + '<div>Estado<b' + (s.lastFat ? ' style="color:' + s.lastFat.color + '"' : '') + '>' + (s.lastFat ? s.lastFat.label : '—') + '</b></div></div>';
     let chips = '';
     s.lowItems.forEach(function(q) { chips += '<span class="bw-chip low">' + q.lbl + ' ' + s.todayW[q.key] + '</span>'; });
-    if (s.adjust) chips += '<span class="bw-flag adj">Ajustar hoy</span>';
-    if (s.rpeOver) chips += '<span class="bw-flag adj" style="background:var(--orange)">RPE por encima del objetivo ' + s.overCount + ' de 3 días</span>';
-    if (s.acwrHigh) chips += '<span class="bw-flag adj" style="background:#8e3b46">Carga alta (ACWR ' + String(Number(s.acwrNum).toFixed(2)).replace('.', ',') + ')</span>';
-    if (s.veryLow) chips += '<span class="bw-flag talk" style="background:var(--red)">Muy por debajo de su media ' + s.veryLowDays + ' de 3 días</span>';
-    else if (s.lowAll3) chips += '<span class="bw-flag talk" style="background:var(--orange)">Bajo su media los 3 días</span>';
-    if (s.exhausted) chips += '<span class="bw-flag talk" style="background:#5e5ce6">Agotado ' + s.exhaustedCount + ' de 3 días</span>';
-    if (s.onesSustained) chips += '<span class="bw-flag talk" style="background:var(--orange)">Un 1 en el check-in ' + s.onesDays + ' de 3 días</span>';
-    if (s.painRepeated) chips += '<span class="bw-flag talk" style="background:#b4532a">Menciona dolor</span>';
-    if (s.talk) chips += '<span class="bw-flag talk">Hablar con él</span>';
+    // Un mensaje por motivo: qué pasa y qué hacer. Color = urgencia (rojo, naranja, azul).
+    const msg = function(color, title, action) { return '<span class="bw-flag" style="background:' + color + '"><b>' + title + '</b> · ' + action + '</span>'; };
+    const RED = 'var(--red)', ORANGE = 'var(--orange)', BLUE = '#0a84ff';
+    if (s.painNote) chips += msg(RED, 'Dolor', 'revisar antes de entrenar');
+    if (s.rpeOver) chips += msg(RED, 'Ajustar hoy', 'bajar intensidad: RPE +2 sobre el objetivo ' + s.overCount + ' de 3 días');
+    else if (s.acwrHigh) chips += msg(RED, 'Ajustar hoy', 'carga alta (ACWR ' + String(Number(s.acwrNum).toFixed(2)).replace('.', ',') + ') y otra señal');
+    if (s.exhausted) chips += msg(ORANGE, 'Agotamiento', 'valorar menos volumen y preguntar cómo recupera');
+    if (s.distressNote) chips += msg(ORANGE, 'Ánimo bajo', 'hablar en privado');
+    if (s.veryLow || s.lowAll3) {
+      // ítem más bajo de los últimos 3 días
+      const recent = (s.hist || []).filter(function (h) { return [0, 1, 2].map(function (i) { return dateOffsetA(todayStr(), -i); }).indexOf(h.date) !== -1; });
+      if (s.todayW) recent.push(s.todayW);
+      let worst = null;
+      WELL_QS.forEach(function (q) {
+        const vals = recent.map(function (h) { return h[q.key]; }).filter(function (v) { return v != null; });
+        if (!vals.length) return;
+        const avg = vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
+        if (!worst || avg < worst.avg) worst = { lbl: q.lbl, avg: avg };
+      });
+      chips += msg(BLUE, 'Bienestar bajo', (s.veryLow ? 'muy por debajo de su media' : 'bajo su media los 3 días') + (worst ? ': preguntar por ' + worst.lbl.toLowerCase() : ''));
+    }
+    if (s.onesSustained) {
+      const lbls = WELL_QS.filter(function (q) { return s.todayW && s.todayW[q.key] === 1; }).map(function (q) { return q.lbl; });
+      chips += msg(ORANGE, (lbls.length ? lbls.join(' y ') : 'Algún ítem') + ' en 1', 'preguntar qué pasa');
+    }
     const q = s.distressNote || s.painNote;
     if (q) chips += '<div class="bw-quote">«' + escapeHtml(q.note.trim().slice(0, 110)) + '» <span>' + escapeHtml(formatDateLabel(q.date)) + '</span></div>';
     html += '<div class="bw-row">' + scoreHtml + '<div class="bw-main"><div class="bw-name">' + escapeHtml(s.name) + '</div><div class="bw-base">' + baseTxt + '</div>'
