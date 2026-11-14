@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
-<title>Ondrift STAGING v3.5 + bloqueo IP</title>
+<title>Ondrift STAGING v3.7</title>
 <style>
   :root {
     --bg: #cfdbe9;
@@ -1009,6 +1009,7 @@
   .btn-refresh.spinning svg { animation: odSpin .8s linear infinite; }
   @keyframes odSpin { to { transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce) { .btn-refresh.spinning svg { animation: none; opacity: .5; } }
+  .bw-group { margin: 2px 0 10px; padding: 10px 12px; border-radius: 12px; font-size: 0.8rem; line-height: 1.4; color: var(--text); background: rgba(94,92,230,0.10); border: 1px solid rgba(94,92,230,0.22); }
   .help-art { margin-bottom: 10px; padding: 0; overflow: hidden; }
   .help-art > summary { list-style: none; cursor: pointer; padding: 16px 18px; font-weight: 700; color: var(--text); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
   .help-art > summary::-webkit-details-marker { display: none; }
@@ -3517,11 +3518,15 @@ function calcPeakVelocity(steps) {
   return { v: v, pace100: paceFromSpeed(v) };
 }
 
+// Zonas contiguas, sin huecos, como % de la velocidad a 4 mmol/L. Orientativas:
+// referencias en el manual (Ayuda > Test de lactato). El LT1 a 2 mmol/L fijos no se
+// usa como límite: en nadadores entrenados sale al 93–97 % del umbral y vaciaría la Z2.
 function calcLactateZones(vThreshold) {
+  const z12 = 0.80;
   const ranges = [
-    { zona: 'Z1 · Recuperación',   max: 0.80, objetivo: 'Recuperación activa' },
-    { zona: 'Z2 · Base aeróbica',  min: 0.90, max: 1.00, objetivo: 'Base oxidativa' },
-    { zona: 'Z3 · Umbral (EN1)',   min: 1.00, max: 1.03, objetivo: 'Máximo estado estable' },
+    { zona: 'Z1 · Recuperación',   max: z12, objetivo: 'Recuperación activa' },
+    { zona: 'Z2 · Base aeróbica',  min: z12, max: 1.00, objetivo: 'Base oxidativa' },
+    { zona: 'Z3 · Umbral (EN1)',   min: 1.00, max: 1.04, objetivo: 'Máximo estado estable' },
     { zona: 'Z4 · VO2max (EN2)',   min: 1.04, max: 1.07, objetivo: 'Potencia aeróbica máxima' }
   ];
   return ranges.map(function(r) {
@@ -4904,6 +4909,13 @@ async function openCoachAdminModal() {
 // Cada dispositivo recuerda en localStorage cuál fue la última que vio.
 // ============================================================
 const CHANGELOG = [
+  { v: 26, date: '2026-11-14', role: 'coach', text: '<div class="nt">Bienestar hoy: solo lo evidente</div><ul>'
+    + '<li>Sale quien está <b>Agotado 2 de 3 días</b>, <b>muy por debajo de su media</b> 2 de 3 días o <b>bajo su media los 3 días</b>, marca un <b>1</b> en el check-in 2 de 3 días, o escribe una <b>nota</b> de dolor o agobio. El RPE por encima del objetivo sigue marcando <b>Ajustar hoy</b>.</li>'
+    + '<li><b>Cansado</b> ya no saca a nadie solo: si lo marca mucha gente, verás arriba <b>Semana exigente</b>, porque es la carga del grupo.</li></ul>' },
+  { v: 25, date: '2026-11-13', role: 'coach', text: '<div class="nt">Test de lactato: zonas sin huecos y umbral en banda</div><ul>'
+    + '<li><b>Z2 Base aeróbica</b> va del 80 al 100 % del umbral y la <b>Z3</b> del 100 al 104 %: ya no hay ritmos sin zona.</li>'
+    + '<li>En el gráfico, el umbral se ve como una <b>banda sombreada</b> (3–5 mmol/L): el umbral real de cada nadador está por esa zona, no en un punto exacto.</li>'
+    + '<li>Los tests ya guardados se recalculan solos. Las fuentes están en Ayuda &gt; Test de lactato.</li></ul>' },
   { v: 24, date: '2026-11-13', text: '<div class="nt">La app se actualiza sola</div><ul>'
     + '<li>Al volver a la app después de un rato, los datos se <b>actualizan solos</b>: ya no hace falta cerrarla y abrirla.</li>'
     + '<li>Si estás escribiendo algo, espera a que termines para no borrártelo.</li>'
@@ -5046,7 +5058,7 @@ function latestChangelogV() {
 // lee y los muestra (no puede cambiar el plan ni deshacer la mayoría de edad).
 // ============================================================
 // Versión de la app: subir el número en cada cambio (2.0 = archivo de producción del 26-oct-2026)
-const APP_VERSION = '3.5';
+const APP_VERSION = '3.7';
 const PLAN_URL = 'https://ondrift.app/?landing#precio';
 const LEGAL_TERMS_URL = 'https://ondrift.app/terminos';
 const LEGAL_PRIVACY_URL = 'https://ondrift.app/privacidad';
@@ -6124,6 +6136,9 @@ function buildLactateModal() {
     });
     zt.appendChild(tb);
     card.appendChild(zt);
+    const zn = document.createElement('div'); zn.style.cssText = 'font-size:0.72rem;color:var(--text3);margin-top:6px';
+    zn.textContent = 'Zonas orientativas, en % de su ritmo a 4 mmol/L. En el gráfico, la banda verde marca dónde está probablemente su umbral real (3–5 mmol/L). Fuentes: Ayuda > Test de lactato.';
+    card.appendChild(zn);
     card.appendChild(buildLactateChart(S.lactateResult.steps, S.lactateResult.threshold, S.lactateResult.aerobic));
   }
   const doneBtn = document.createElement('button'); doneBtn.className = 'btn btn-primary'; doneBtn.textContent = 'Listo'; doneBtn.style.marginTop = '14px';
@@ -6180,10 +6195,19 @@ function wellnessStatusA(name, acwrItem) {
   }
   const cut = base != null ? base - Math.max(sd, 2) : 10;
   const isLow = function(c) { return c != null && c <= cut; };
+  // "Muy por debajo": el doble del margen normal (solo con media propia)
+  const cutVery = base != null ? base - 2 * Math.max(sd, 2) : null;
+  const isVeryLow = function(c) { return cutVery != null && c != null && c <= cutVery; };
   const days3 = [0, 1, 2].map(function(i) { return dateOffsetA(today, -i); });
   const lowToday = isLow(comp) || !!(todayW && ((todayW.sleep != null && todayW.sleep <= 2) || (todayW.soreness != null && todayW.soreness <= 2)));
   const lowDays = days3.filter(function(d) { return isLow(wellComposite(byDate[d])); }).length;
   const lowSustained = lowDays >= 2;
+  // Criterio "evidente": solo lo extremo o lo que se mantiene los 3 días
+  const lowAll3 = base != null && lowDays >= 3;
+  const veryLowDays = days3.filter(function(d) { return isVeryLow(wellComposite(byDate[d])); }).length;
+  const veryLow = veryLowDays >= 2;
+  const onesDays = days3.filter(function(d) { const x = byDate[d]; return x && WELL_QS.some(function(q) { return x[q.key] === 1; }); }).length;
+  const onesSustained = onesDays >= 2;
   const lowItems = todayW ? WELL_QS.filter(function(q) { return todayW[q.key] != null && todayW[q.key] <= 2; }) : [];
   const midItems = todayW ? WELL_QS.filter(function(q) { return todayW[q.key] === 3; }) : [];
   // Sueño o músculos en 1–2: cuenta si se repite 2 de los 3 días (un día malo suelto no sale)
@@ -6195,16 +6219,19 @@ function wellnessStatusA(name, acwrItem) {
   const rpeHist = DATA.athleteHist[name] || [];
   const last = rpeHist.length ? rpeHist[rpeHist.length - 1] : null;
   const in3 = rpeHist.filter(function(h) { return days3.indexOf(h.date) !== -1; });
-  const tiredDays = {}; const overDays = {};
+  const tiredDays = {}; const overDays = {}; const exhaustedDays = {};
   in3.forEach(function(h) {
     if (h.fatigue != null && h.fatigue >= 4) tiredDays[h.date] = true;
+    if (h.fatigue != null && h.fatigue >= 5) exhaustedDays[h.date] = true;
     const day = DATA.sessions && DATA.sessions[h.date];
     const sess = day && day[h.slot];
     const target = sess && sess.targetRPE != null ? Number(sess.targetRPE) : null;
     if (target != null && h.rpe != null && h.rpe >= target + 2) overDays[h.date] = true;
   });
   const tiredStreak = Object.keys(tiredDays).length;
-  const tired = tiredStreak >= 2;
+  const tired = tiredStreak >= 2;                 // ya NO alerta solo: cuenta para el aviso de grupo
+  const exhaustedCount = Object.keys(exhaustedDays).length;
+  const exhausted = exhaustedCount >= 2;
   const overCount = Object.keys(overDays).length;
   const rpeOver = overCount >= 2;
   const notes = in3.filter(function(h) { return h.note && h.note.trim(); });
@@ -6217,7 +6244,7 @@ function wellnessStatusA(name, acwrItem) {
   const calibrated = !!(acwrItem && acwrItem.info && !acwrItem.info.calibrating);
   const loadDates = Object.keys(rpeHist.reduce(function(m, h) { m[h.date] = 1; return m; }, {})).sort();
   const reliable = calibrated && loadDates.length >= 16 && loadDates[0] <= dateOffsetA(today, -21);
-  const talk = tired || lowSustained || keyLowSustained || !!distressNote || painRepeated;
+  const talk = exhausted || veryLow || lowAll3 || onesSustained || !!distressNote || painRepeated;
   const acwrHigh = reliable && acwrNum != null && acwrNum >= 1.5 && (talk || rpeOver);
   const adjust = rpeOver || acwrHigh;
   return { name: name, todayW: todayW, comp: comp, base: base, sd: sd, lowItems: lowItems, midItems: midItems, keyLow: keyLow,
@@ -6226,6 +6253,8 @@ function wellnessStatusA(name, acwrItem) {
     tiredStreak: tiredStreak, tired: tired, rpeOver: rpeOver, overCount: overCount,
     distressNote: distressNote, painRepeated: painRepeated, painNote: painNote,
     acwrItem: acwrItem, acwrNum: acwrNum, acwrHigh: acwrHigh, acwrLimit: false, acwrNear: false, acwrReliable: reliable,
+    exhausted: exhausted, exhaustedCount: exhaustedCount, veryLow: veryLow, veryLowDays: veryLowDays, lowAll3: lowAll3,
+    onesSustained: onesSustained, onesDays: onesDays,
     adjust: adjust, talk: talk, flagged: adjust || talk, hist: hist };
 }
 
@@ -6242,22 +6271,27 @@ function buildWellnessBlockA(acwrData) {
   });
   const nAdjust = flagged.filter(function(s) { return s.adjust; }).length;
   const nOneDay = all.filter(function(s) { return s.lowToday && !s.flagged; }).length;
+  // Aviso de grupo: si mucha gente marca cansancio, es la carga del grupo, no casos aislados
+  const withData = all.filter(function(s) { return s.comp != null || s.last; }).length;
+  const nTired = all.filter(function(s) { return s.tired; }).length;
+  const groupTired = withData > 0 && nTired >= 3 && nTired / withData >= 0.4;
 
   const head = document.createElement('div'); head.className = 'bw-head';
-  head.innerHTML = '<div class="section-title">Bienestar hoy</div><small>últimas 72 h · solo lo que se repite o preocupa</small>';
+  head.innerHTML = '<div class="section-title">Bienestar hoy</div><small>últimas 72 h · solo lo evidente</small>';
   wrap.appendChild(head);
   const card = document.createElement('div'); card.className = 'card bw-card';
   let html = '<div class="bw-sum">'
     + '<span>Check-in<b>' + withCheckin + '/' + athletes.length + '</b></span>'
     + '<span>A vigilar<b style="color:' + (flagged.length ? 'var(--orange)' : 'var(--text)') + '">' + flagged.length + '</b></span>'
     + '<span>Ajustar hoy<b style="color:' + (nAdjust ? 'var(--red)' : 'var(--text)') + '">' + nAdjust + '</b></span></div>';
+  if (groupTired) html += '<div class="bw-group" role="status"><b>Semana exigente:</b> ' + nTired + ' de ' + withData + ' marcan cansancio 2 de los últimos 3 días. Es la carga del grupo, no casos aislados.</div>';
   const ink = function(label) { return { 'Riesgo': '#e5484d', 'Atención': '#d97706', 'Óptimo': '#0f9d58', 'Subcarga': '#0a84ff', 'Calibrando': '#7d93a8' }[label] || 'var(--text)'; };
   flagged.forEach(function(s) {
     const scoreHtml = s.comp != null
       ? '<div class="bw-score" style="background:' + wellCompColor(s.comp) + '">' + s.comp + '<small>/20</small></div>'
       : '<div class="bw-score none">—</div>';
     const baseTxt = s.comp == null ? 'Sin check-in hoy'
-      : (s.base != null ? 'Su media ' + String(s.base).replace('.', ',') + ' · ' + (s.comp - s.base >= 0 ? '+' : '−') + String(Math.abs(Math.round((s.comp - s.base) * 10) / 10)).replace('.', ',') : 'Todavía sin media (menos de 3 check-ins)');
+      : (s.base != null ? 'Su media ' + String(s.base).replace('.', ',') + ' · ' + (s.comp - s.base >= 0 ? '+' : '−') + String(Math.abs(Math.round((s.comp - s.base) * 10) / 10)).replace('.', ',') : 'Todavía sin media (menos de 7 check-ins)');
     const metrics = '<div class="bw-metrics">'
       + '<div>ACWR<b style="color:' + (s.acwrItem ? ink(s.acwrItem.info.label) : 'var(--text2)') + '">' + (s.acwrNum != null ? Number(s.acwrNum).toFixed(2) : '—') + '</b></div>'
       + '<div>Últ. RPE<b' + (s.last ? ' style="color:' + rpeColor(s.last.rpe) + '"' : '') + '>' + (s.last ? s.last.rpe : '—') + '</b></div>'
@@ -6267,8 +6301,10 @@ function buildWellnessBlockA(acwrData) {
     if (s.adjust) chips += '<span class="bw-flag adj">Ajustar hoy</span>';
     if (s.rpeOver) chips += '<span class="bw-flag adj" style="background:var(--orange)">RPE por encima del objetivo ' + s.overCount + ' de 3 días</span>';
     if (s.acwrHigh) chips += '<span class="bw-flag adj" style="background:#8e3b46">Carga alta (ACWR ' + String(Number(s.acwrNum).toFixed(2)).replace('.', ',') + ')</span>';
-    if (s.lowSustained) chips += '<span class="bw-flag talk" style="background:var(--orange)">Bajo su media ' + s.lowDays + ' de 3 días</span>';
-    if (s.tired) chips += '<span class="bw-flag talk" style="background:' + (s.tiredStreak >= 3 ? '#5e5ce6' : 'var(--orange)') + '">Cansado ' + s.tiredStreak + ' de 3 días</span>';
+    if (s.veryLow) chips += '<span class="bw-flag talk" style="background:var(--red)">Muy por debajo de su media ' + s.veryLowDays + ' de 3 días</span>';
+    else if (s.lowAll3) chips += '<span class="bw-flag talk" style="background:var(--orange)">Bajo su media los 3 días</span>';
+    if (s.exhausted) chips += '<span class="bw-flag talk" style="background:#5e5ce6">Agotado ' + s.exhaustedCount + ' de 3 días</span>';
+    if (s.onesSustained) chips += '<span class="bw-flag talk" style="background:var(--orange)">Un 1 en el check-in ' + s.onesDays + ' de 3 días</span>';
     if (s.painRepeated) chips += '<span class="bw-flag talk" style="background:#b4532a">Menciona dolor</span>';
     if (s.talk) chips += '<span class="bw-flag talk">Hablar con él</span>';
     const q = s.distressNote || s.painNote;
@@ -8914,6 +8950,22 @@ function buildLactateChart(steps, threshold, aerobic) {
   };
   const refLines = refLine(4.0, '#c0392b', '4.0 · OBLA') + refLine(2.0, '#2980b9', '2.0 · LT1');
 
+  // Banda sombreada: el umbral real de cada nadador está "por esta zona", no en una
+  // línea exacta. Umbral: entre 3 y 5 mmol/L; LT1: entre 1,5 y 2,5 mmol/L.
+  function band(lo, hi, color, label, labelY) {
+    const a = calcLactateThresholdAt(steps, lo), b = calcLactateThresholdAt(steps, hi);
+    if (!a && !b) return '';
+    const x1 = xPos(a ? a.v : vMin), x2 = xPos(b ? b.v : vMax);
+    if (!(x2 > x1)) return '';
+    const txt = (a ? a.pace100.replace(/\.\d+$/, '') : '…') + '–' + (b ? b.pace100.replace(/\.\d+$/, '') : '…');
+    const full = label + ' ' + txt, lw = full.length * 5.0 + 14;
+    const cx = Math.min(PAD.left + iW - lw / 2, Math.max(PAD.left + lw / 2, (x1 + x2) / 2));
+    return '<rect x="'+x1+'" y="'+PAD.top+'" width="'+(x2-x1)+'" height="'+iH+'" fill="'+color+'" opacity="0.14"/>' +
+      '<line x1="'+x1+'" y1="'+PAD.top+'" x2="'+x1+'" y2="'+(PAD.top+iH)+'" stroke="'+color+'" stroke-width="1" opacity="0.35"/>' +
+      '<line x1="'+x2+'" y1="'+PAD.top+'" x2="'+x2+'" y2="'+(PAD.top+iH)+'" stroke="'+color+'" stroke-width="1" opacity="0.35"/>' +
+      '<rect x="'+(cx-lw/2)+'" y="'+labelY+'" width="'+lw+'" height="15" rx="7" fill="'+color+'"/>' +
+      '<text x="'+cx+'" y="'+(labelY+11)+'" font-size="8.5" font-weight="700" fill="white" text-anchor="middle">'+full+'</text>';
+  }
   function marker(th, color, labelY) {
     if (!th) return '';
     const tx = xPos(th.v);
@@ -8922,7 +8974,7 @@ function buildLactateChart(steps, threshold, aerobic) {
       '<rect x="'+(tx-24)+'" y="'+labelY+'" width="48" height="15" rx="7" fill="'+color+'"/>' +
       '<text x="'+tx+'" y="'+(labelY+11)+'" font-size="8.5" font-weight="700" fill="white" text-anchor="middle">'+th.pace100+'</text>';
   }
-  const markers = marker(threshold, '#1e8449', PAD.top - 22) + marker(aerobic, '#2980b9', PAD.top - 4);
+  const markers = band(3.0, 5.0, '#1e8449', 'Umbral', PAD.top - 22) + band(1.5, 2.5, '#2980b9', 'LT1', PAD.top - 4);
 
   const xLabels = pts0.map(function(p){ return '<text x="'+xPos(p.v)+'" y="'+(H-6)+'" font-size="8.5" fill="#4a6a8a" text-anchor="middle">'+p.v.toFixed(2)+'</text>'; }).join('');
   const axisTitle = '<text x="'+(PAD.left+iW/2)+'" y="'+(H+2)+'" font-size="8" fill="#7a9ab8" text-anchor="middle"></text>' +
