@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
-<title>Ondrift STAGING v3.5</title>
+<title>Ondrift STAGING v3.5 + bloqueo IP</title>
 <style>
   :root {
     --bg: #cfdbe9;
@@ -1592,6 +1592,7 @@ let SB_LAST_ERROR = ''; // texto del último error devuelto por PostgREST
 let SB_ACCESS_TOKEN = null; // no restauramos token viejo al arrancar: caducaría y daría un 401 falso ("clave revocada"). El coach re-loguea por sesión.
 let SB_REFRESH_TOKEN = null; // el nadador sí: su refresh_token permite renovar el access_token caducado sin volver a pedir el PIN.
 let LAST_AUTH_ERROR = null; // 'confirm' | 'creds' | 'locked' | 'offline' | 'busy'
+let LAST_AUTH_MSG = '';    // texto del servidor para bloqueos (minutos que faltan)
 let COACH_CREDS = null; // {email,password} SOLO en memoria durante la sesion; nunca se guarda en disco ni se hardcodea
 
 // Tras iniciar sesión: mira el estado real del coach (pending/approved) y quién es admin.
@@ -1647,7 +1648,12 @@ async function coachSignIn(email, password) {
     });
     if (!res.ok) {
       const t = await res.text(); console.error('Coach auth error', t);
+      // 423 = cuenta bloqueada (temporal o permanente) · 429 con retry_secs = demasiados intentos
+      // desde esta conexión. El servidor manda el texto con los minutos que faltan: se muestra tal cual.
+      let j = null; try { j = JSON.parse(t); } catch (e) {}
+      LAST_AUTH_MSG = (j && j.error && (res.status === 423 || (res.status === 429 && j.retry_secs))) ? j.error : '';
       if (res.status === 423) { LAST_AUTH_ERROR = 'locked'; return false; }
+      if (res.status === 429 && j && j.retry_secs) { LAST_AUTH_ERROR = 'locked'; return false; }
       if (res.status === 429 || res.status >= 500) { LAST_AUTH_ERROR = 'busy'; return false; }
       LAST_AUTH_ERROR = (t && t.indexOf('not confirmed') !== -1) ? 'confirm' : 'creds';
       return false;
@@ -4347,7 +4353,7 @@ function buildPin() {
     err.textContent = (LAST_AUTH_ERROR === 'confirm')
       ? 'Tienes que confirmar tu email antes de entrar. Busca el correo de confirmaci\u00f3n en tu bandeja (y en spam).'
       : (LAST_AUTH_ERROR === 'locked')
-      ? 'Cuenta bloqueada por intentos fallidos. Ped\u00ed a tu entrenador/admin que la reactive.'
+      ? (LAST_AUTH_MSG || 'Cuenta bloqueada por intentos fallidos. Ped\u00ed a tu entrenador/admin que la reactive.')
       : (LAST_AUTH_ERROR === 'offline')
       ? 'Sin conexi\u00f3n. Revisa tu internet e int\u00e9ntalo de nuevo.'
       : (LAST_AUTH_ERROR === 'busy')
