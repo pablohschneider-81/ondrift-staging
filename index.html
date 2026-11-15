@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
-<title>Ondrift STAGING v3.7</title>
+<title>Ondrift STAGING v3.8</title>
 <style>
   :root {
     --bg: #cfdbe9;
@@ -1010,6 +1010,18 @@
   @keyframes odSpin { to { transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce) { .btn-refresh.spinning svg { animation: none; opacity: .5; } }
   .bw-group { margin: 2px 0 10px; padding: 10px 12px; border-radius: 12px; font-size: 0.8rem; line-height: 1.4; color: var(--text); background: rgba(94,92,230,0.10); border: 1px solid rgba(94,92,230,0.22); }
+  .ap-card { padding: 14px 16px; margin-bottom: 16px; }
+  .ap-block { padding-top: 12px; margin-top: 12px; border-top: 1px solid rgba(100,140,180,0.15); }
+  .ap-ttl { font-weight: 800; font-size: 0.9rem; color: var(--text); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .ap-ttl span { font-size: 0.68rem; font-weight: 600; color: var(--text3); }
+  .ap-msg { margin-top: 6px; padding: 7px 10px; border-left: 3px solid; border-radius: 6px; background: rgba(255,255,255,0.55); font-size: 0.8rem; line-height: 1.4; color: var(--text2); }
+  .ap-msg b { color: var(--text); }
+  .ap-streak { display: flex; align-items: center; gap: 10px; }
+  .ap-streak b { font-size: 1.8rem; font-weight: 800; color: #0a84ff; line-height: 1; }
+  .ap-streak span { font-size: 0.8rem; color: var(--text2); }
+  .ap-str { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 4px 0; }
+  .ap-str b { display: block; font-size: 0.82rem; color: var(--text); }
+  .ap-str small { font-size: 0.72rem; color: var(--text3); }
   .help-art { margin-bottom: 10px; padding: 0; overflow: hidden; }
   .help-art > summary { list-style: none; cursor: pointer; padding: 16px 18px; font-weight: 700; color: var(--text); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
   .help-art > summary::-webkit-details-marker { display: none; }
@@ -2277,7 +2289,7 @@ async function dbSaveWellness(date, athleteName, sleep, soreness, fatigue, stres
 async function dbGetAthleteWellnessHist(name) {
   const athleteId = await dbAthleteId(name);
   if (!athleteId) return [];
-  const from = new Date(); from.setDate(from.getDate() - 13);
+  const from = new Date(); from.setDate(from.getDate() - 27);   // 28 días: gráfico de 14 + su media
   const fromS = from.getFullYear()+'-'+String(from.getMonth()+1).padStart(2,'0')+'-'+String(from.getDate()).padStart(2,'0');
   const rows = await sbFetch('wellness_entries?athlete_id=eq.' + athleteId + '&select=date,sleep,soreness,fatigue,stress&date=gte.' + fromS + '&order=date.asc');
   return rows || [];
@@ -4909,6 +4921,11 @@ async function openCoachAdminModal() {
 // Cada dispositivo recuerda en localStorage cuál fue la última que vio.
 // ============================================================
 const CHANGELOG = [
+  { v: 27, date: '2026-11-15', role: 'athlete', text: '<div class="nt">Tu progreso, en Inicio</div><ul>'
+    + '<li><b>Mi bienestar</b>: tus últimos 14 días con tu media.</li>'
+    + '<li><b>Mi carga</b>: tus 4 últimas semanas.</li>'
+    + '<li><b>Mi fuerza</b>: cómo sube tu 1RM.</li>'
+    + '<li>Y tu <b>racha</b> de entrenos con check-in y RPE.</li></ul>' },
   { v: 26, date: '2026-11-14', role: 'coach', text: '<div class="nt">Bienestar hoy: solo lo evidente</div><ul>'
     + '<li>Sale quien está <b>Agotado 2 de 3 días</b>, <b>muy por debajo de su media</b> 2 de 3 días o <b>bajo su media los 3 días</b>, marca un <b>1</b> en el check-in 2 de 3 días, o escribe una <b>nota</b> de dolor o agobio. El RPE por encima del objetivo sigue marcando <b>Ajustar hoy</b>.</li>'
     + '<li><b>Cansado</b> ya no saca a nadie solo: si lo marca mucha gente, verás arriba <b>Semana exigente</b>, porque es la carga del grupo.</li></ul>' },
@@ -5058,7 +5075,7 @@ function latestChangelogV() {
 // lee y los muestra (no puede cambiar el plan ni deshacer la mayoría de edad).
 // ============================================================
 // Versión de la app: subir el número en cada cambio (2.0 = archivo de producción del 26-oct-2026)
-const APP_VERSION = '3.7';
+const APP_VERSION = '3.8';
 const PLAN_URL = 'https://ondrift.app/?landing#precio';
 const LEGAL_TERMS_URL = 'https://ondrift.app/terminos';
 const LEGAL_PRIVACY_URL = 'https://ondrift.app/privacidad';
@@ -8188,6 +8205,122 @@ function buildTeamMessageComposer() {
   return card;
 }
 
+// ============================================================
+// TU PROGRESO (Inicio del nadador): su propio dato devuelto en gráficos sencillos,
+// con un mensaje calculado de SUS números (nada de frases genéricas).
+// ============================================================
+function apMean(a) { return a.length ? a.reduce(function (x, y) { return x + y; }, 0) / a.length : null; }
+function apFmt(n, dec) { return String(Math.round(n * Math.pow(10, dec || 0)) / Math.pow(10, dec || 0)).replace('.', ','); }
+function apMsg(kind, html) {
+  const c = { good: '#1e8449', warn: '#c0392b', info: '#0a84ff', note: '#4a6a8a' }[kind] || '#4a6a8a';
+  return '<div class="ap-msg" style="border-left-color:' + c + '">' + html + '</div>';
+}
+function apWellness(name) {
+  const hist = DATA.athleteWellHist[name] || [];
+  const t = todayStr();
+  const byDate = {}; hist.forEach(function (h) { byDate[h.date] = wellComposite(h); });
+  const tw = getDayWellness(t)[name]; if (tw) byDate[t] = wellComposite(tw);
+  const prev = Object.keys(byDate).filter(function (d) { return d < dateOffsetA(t, -2) && byDate[d] != null; }).map(function (d) { return byDate[d]; });
+  const base = prev.length >= 7 ? apMean(prev) : null;
+  const pts = []; for (let i = 13; i >= 0; i--) { const ds = dateOffsetA(t, -i); pts.push({ d: ds, v: byDate[ds] != null ? byDate[ds] : null }); }
+  const n = Object.keys(byDate).filter(function (d) { return byDate[d] != null; }).length;
+  // gráfico
+  // Escala ajustada a sus valores (mín 6 puntos de rango) para que la línea se lea
+  const vals = pts.map(function (p) { return p.v; }).filter(function (v) { return v != null; }).concat(base != null ? [base] : []);
+  let lo = vals.length ? Math.min.apply(null, vals) - 1 : 4, hi = vals.length ? Math.max.apply(null, vals) + 1 : 20;
+  if (hi - lo < 6) { const m = (hi + lo) / 2; lo = m - 3; hi = m + 3; } lo = Math.max(4, lo); hi = Math.min(20, hi);
+  const W = 300, H = 80, P = 10, y = function (v) { return P + (H - 2 * P) * (1 - (v - lo) / ((hi - lo) || 1)); }, x = function (i) { return P + i * (W - 2 * P) / 13; };
+  let path = '', dots = '';
+  pts.forEach(function (p, i) { if (p.v == null) return; path += (path ? ' L' : 'M') + x(i).toFixed(1) + ' ' + y(p.v).toFixed(1);
+    dots += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.v).toFixed(1) + '" r="' + (i === 13 ? 4.5 : 3) + '" fill="' + (i === 13 ? wellCompColor(p.v) : '#0a84ff') + '"/>'; });
+  const baseLine = base != null ? '<line x1="' + P + '" x2="' + (W - P) + '" y1="' + y(base).toFixed(1) + '" y2="' + y(base).toFixed(1) + '" stroke="rgba(74,106,134,0.55)" stroke-dasharray="4 4"/><text x="' + (W - P) + '" y="' + (y(base) - 4).toFixed(1) + '" text-anchor="end" font-size="9" fill="#4a6a8a">tu media ' + apFmt(base, 1) + '</text>' : '';
+  const svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="' + H + '" role="img" aria-label="Tu bienestar de los últimos 14 días">' + baseLine + (path ? '<path d="' + path + '" fill="none" stroke="#0a84ff" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>' : '') + dots + '</svg>';
+  // mensaje
+  let msg;
+  const last3 = [0, 1, 2].map(function (i) { return byDate[dateOffsetA(t, -i)]; });
+  const below = base != null ? last3.filter(function (v) { return v != null && v <= base - 2; }).length : 0;
+  const todayV = byDate[t];
+  if (!n) msg = apMsg('info', 'Haz tu check-in cada mañana: aquí verás cómo llegas a los entrenos.');
+  else if (base == null) msg = apMsg('info', 'Llevas <b>' + n + '</b> check-in' + (n === 1 ? '' : 's') + '. Con <b>7</b>, tu entrenador podrá compararte contigo mismo.');
+  else if (below >= 2) msg = apMsg('warn', 'Llevas <b>' + below + ' días</b> por debajo de tu media. Cuéntaselo a tu entrenador: puede ajustar el entreno.');
+  else if (todayV != null && todayV >= base + 2) msg = apMsg('good', 'Hoy llegas <b>' + apFmt(todayV - base, 1) + ' puntos por encima</b> de tu media.');
+  else if (todayV == null && daySlots(DATA.sessions && DATA.sessions[t]).length) msg = apMsg('note', 'Aún no has hecho el check-in de hoy.');
+  else if (todayV == null) { const lastD = Object.keys(byDate).filter(function (d) { return byDate[d] != null; }).sort().pop();
+    const lv = byDate[lastD], df = lv - base;
+    msg = df <= -2 ? apMsg('warn', 'Tu último check-in (' + formatDateLabel(lastD) + ') fue <b>' + apFmt(-df, 1) + ' puntos por debajo</b> de tu media. Aprovecha el descanso de hoy.')
+      : apMsg(df >= 2 ? 'good' : 'note', 'Último check-in (' + formatDateLabel(lastD) + '): <b>' + lv + '/20</b>, tu media es ' + apFmt(base, 1) + '. Hoy descansas.'); }
+  else msg = apMsg('note', 'Estás en tu línea: ' + todayV + '/20, tu media es ' + apFmt(base, 1) + '.');
+  return '<div class="ap-block"><div class="ap-ttl">Mi bienestar <span>14 días</span></div>' + svg + msg + '</div>';
+}
+function apLoad(name) {
+  const hist = DATA.athleteHist[name] || [];
+  const t = todayStr();
+  const weeks = [0, 0, 0, 0];   // 0 = esta semana (últimos 7 días)
+  hist.forEach(function (h) { const days = Math.round((new Date(t + 'T12:00:00') - new Date(h.date + 'T12:00:00')) / 86400000);
+    const w = Math.floor(days / 7); if (w >= 0 && w < 4) weeks[w] += (h.rpe || 0) * (h.duration || 80); });
+  const max = Math.max.apply(null, weeks.concat([1]));
+  const W = 300, H = 92, bw = 46, gap = (W - 4 * bw) / 5;
+  let bars = '';
+  [3, 2, 1, 0].forEach(function (w, i) {
+    const h = Math.round((H - 26) * weeks[w] / max), xx = gap + i * (bw + gap), yy = H - 16 - h;
+    bars += '<rect x="' + xx + '" y="' + yy + '" width="' + bw + '" height="' + Math.max(h, 2) + '" rx="6" fill="' + (w === 0 ? '#0a84ff' : 'rgba(10,132,255,0.32)') + '"/>'
+      + '<text x="' + (xx + bw / 2) + '" y="' + (H - 3) + '" text-anchor="middle" font-size="9" fill="#4a6a8a">' + (w === 0 ? 'esta' : '−' + w + ' sem') + '</text>';
+  });
+  const svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="' + H + '" role="img" aria-label="Tu carga de las últimas 4 semanas">' + bars + '</svg>';
+  const prev = weeks.slice(1).filter(function (v) { return v > 0; });
+  const avg = apMean(prev);
+  let msg;
+  if (!weeks[0] && !avg) msg = apMsg('info', 'Pon el RPE después de cada entreno: con él se calcula tu carga.');
+  else if (avg == null) msg = apMsg('note', 'Cuando lleves un par de semanas verás si tu carga sube o baja.');
+  else {
+    const pct = Math.round(100 * (weeks[0] - avg) / avg);
+    if (pct >= 15) msg = apMsg('warn', 'Esta semana llevas un <b>' + pct + ' % más</b> de carga que tu media. Cuida el sueño y la comida.');
+    else if (pct <= -20) msg = apMsg('good', 'Semana más suave (<b>' + Math.abs(pct) + ' % menos</b>): buen momento para recuperar.');
+    else msg = apMsg('note', 'Tu carga está en tu línea (' + (pct >= 0 ? '+' : '−') + Math.abs(pct) + ' % sobre tu media).');
+  }
+  return '<div class="ap-block"><div class="ap-ttl">Mi carga <span>4 semanas · RPE × minutos</span></div>' + svg + msg + '</div>';
+}
+function apStrength() {
+  const tr = DATA.athStrTrend || {};
+  const names = Object.keys(tr).filter(function (k) { return (tr[k] || []).length; });
+  if (!names.length) return '<div class="ap-block"><div class="ap-ttl">Mi fuerza</div>' + apMsg('info', 'Los días de físico, apunta peso, repeticiones y RIR en <b>Fuerza</b>: aquí verás subir tu 1RM.') + '</div>';
+  let rows = '', best = null;
+  names.forEach(function (k) {
+    const v = tr[k].map(Number), first = v[0], last = v[v.length - 1], diff = last - first;
+    const W = 120, H = 30, mn = Math.min.apply(null, v), mx = Math.max.apply(null, v), sp = (mx - mn) || 1;
+    const path = v.map(function (val, i) { return (i ? 'L' : 'M') + (4 + i * (W - 8) / Math.max(v.length - 1, 1)).toFixed(1) + ' ' + (H - 4 - (val - mn) / sp * (H - 8)).toFixed(1); }).join(' ');
+    rows += '<div class="ap-str"><div><b>' + escapeHtml(k) + '</b><small>' + Math.round(last) + ' kg' + (v.length > 1 ? ' · ' + (diff >= 0 ? '+' : '−') + apFmt(Math.abs(diff), 1) + ' kg' : '') + '</small></div>'
+      + '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" aria-hidden="true"><path d="' + path + '" fill="none" stroke="' + (diff >= 0 ? '#1e8449' : '#d97706') + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>';
+    if (v.length > 1 && (!best || diff > best.diff)) best = { k: k, diff: diff };
+  });
+  const msg = best && best.diff > 0 ? apMsg('good', 'Tu <b>' + escapeHtml(best.k) + '</b> ha subido <b>' + apFmt(best.diff, 1) + ' kg</b> desde que lo registras.')
+    : apMsg('note', 'Sigue registrando tus series a RIR 0: cada una ajusta tu 1RM.');
+  return '<div class="ap-block"><div class="ap-ttl">Mi fuerza <span>1RM estimado</span></div>' + rows + msg + '</div>';
+}
+function apStreak(name) {
+  // Días de entreno seguidos (hacia atrás desde ayer) con check-in y RPE
+  const t = todayStr(); const hist = DATA.athleteHist[name] || []; const wh = DATA.athleteWellHist[name] || [];
+  const rpeD = {}; hist.forEach(function (h) { rpeD[h.date] = 1; }); const wD = {}; wh.forEach(function (h) { wD[h.date] = 1; });
+  let streak = 0;
+  for (let i = 1; i < 28; i++) { const ds = dateOffsetA(t, -i); if (!daySlots(DATA.sessions && DATA.sessions[ds]).length) continue; if (rpeD[ds] && wD[ds]) streak++; else break; }
+  const yd = dateOffsetA(t, -1); const ySlots = daySlots(DATA.sessions && DATA.sessions[yd]).length;
+  const missingY = ySlots > 0 && !rpeD[yd];
+  let html = '<div class="ap-streak"><b>' + streak + '</b><span>entreno' + (streak === 1 ? '' : 's') + ' seguidos con check-in y RPE</span></div>';
+  if (missingY) html += apMsg('warn', 'No has puesto el <b>RPE de ayer</b>. Ponlo ahora en <b>Mi RPE</b>: si no, tu carga sale mal.');
+  return html;
+}
+function buildAthleteProgress() {
+  const name = S.athleteName; const wrap = document.createElement('div');
+  if (DATA.athStrTrend === undefined && !S._strLoading) {
+    S._strLoading = true; dbLoadAthleteStrength(name).then(function () { S._strLoading = false; render(); }).catch(function () { S._strLoading = false; });
+  }
+  const st = document.createElement('div'); st.className = 'section-title'; st.textContent = 'Tu progreso'; wrap.appendChild(st);
+  const card = document.createElement('div'); card.className = 'card ap-card';
+  card.innerHTML = apStreak(name) + apWellness(name) + apLoad(name) + apStrength();
+  wrap.appendChild(card);
+  return wrap;
+}
+
 function buildAthleteInicio() {
   const d = document.createElement('div');
   const today = new Date();
@@ -8237,6 +8370,7 @@ function buildAthleteInicio() {
   const tmCard = buildTeamMessageCard(); if (tmCard) d.appendChild(tmCard);
   d.appendChild(buildTodayHeroA());
   d.appendChild(buildWeekStripA());
+  d.appendChild(buildAthleteProgress());
 
   // ── Encuesta post-competición pendiente ──
   if (DATA.pendingSurvey[S.athleteName] === undefined) {
