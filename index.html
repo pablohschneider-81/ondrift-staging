@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
-<title>Ondrift STAGING v3.8</title>
+<title>Ondrift STAGING v4.0</title>
 <style>
   :root {
     --bg: #cfdbe9;
@@ -1022,6 +1022,18 @@
   .ap-str { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 4px 0; }
   .ap-str b { display: block; font-size: 0.82rem; color: var(--text); }
   .ap-str small { font-size: 0.72rem; color: var(--text3); }
+  .lac-pt-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .lac-pt { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+  .lac-pt td small { display: block; font-size: 0.62rem; font-weight: 500; color: var(--text3); }
+  .lac-pt th { text-align: center; font-weight: 700; color: var(--text); padding: 4px 2px; border-bottom: 1px solid rgba(100,140,180,0.25); }
+  .lac-pt th:first-child, .lac-pt td:first-child { text-align: left; }
+  .lac-pt td { text-align: center; padding: 6px 2px; border-bottom: 1px solid rgba(100,140,180,0.12); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .lac-pt td:first-child { white-space: normal; font-weight: 600; color: var(--text); }
+  .lac-sets { margin-top: 12px; font-size: 0.78rem; color: var(--text2); line-height: 1.6; }
+  .lac-sets-t { font-weight: 800; color: var(--text); }
+  .lac-sets-t span { font-weight: 500; font-size: 0.7rem; color: var(--text3); margin-left: 6px; }
+  .lac-sets b { color: var(--text); }
+  .lac-cmp { margin-bottom: 10px; padding: 7px 10px; border-left: 3px solid; border-radius: 6px; background: rgba(255,255,255,0.55); font-size: 0.8rem; color: var(--text2); }
   .help-art { margin-bottom: 10px; padding: 0; overflow: hidden; }
   .help-art > summary { list-style: none; cursor: pointer; padding: 16px 18px; font-weight: 700; color: var(--text); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
   .help-art > summary::-webkit-details-marker { display: none; }
@@ -3058,7 +3070,9 @@ async function checkNewVersion() {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
     if (!r.ok) return;
     const v = (await r.text()).trim();
-    if (/^\d+(\.\d+)*$/.test(v) && v !== APP_VERSION && parseFloat(v) > parseFloat(APP_VERSION)) {
+    const newer = function (x, y) { const a = x.split('.').map(Number), b = y.split('.').map(Number);   // 3.10 > 3.9
+      for (let i = 0; i < Math.max(a.length, b.length); i++) { if ((a[i] || 0) !== (b[i] || 0)) return (a[i] || 0) > (b[i] || 0); } return false; };
+    if (/^\d+(\.\d+)*$/.test(v) && v !== APP_VERSION && newer(v, APP_VERSION)) {
       if (S.newVersion !== v) { S.newVersion = v; render(); }
     }
   } catch (e) {}
@@ -3496,6 +3510,54 @@ const LACTATE_PROTOCOLS = {
     help: '3 bloques de 8×100. Lactato: basal + al final de cada bloque + a los 3\' post-esfuerzo (5-6 tomas). Resolución menor que 7x200/4x400 (solo 3 puntos de intensidad reales).'
   }
 };
+
+// Tiempo para una distancia a una velocidad: m:ss (50 m con décimas)
+function lacTime(dist, v) {
+  if (!v || v <= 0) return '—';
+  const t = dist / v, m = Math.floor(t / 60), sec = t - m * 60;
+  if (dist <= 50) return t < 60 ? t.toFixed(1) : m + ':' + (sec < 10 ? '0' : '') + sec.toFixed(1);
+  const r = Math.round(sec); return (r === 60 ? (m + 1) + ':00' : m + ':' + (r < 10 ? '0' : '') + r);
+}
+// Zonas por fracción del umbral (las mismas que calcLactateZones) para la tabla por distancias
+const LAC_ZONE_FRAC = [
+  { zona: 'Z1', sub: 'Recup.', lo: null, hi: 0.80 },
+  { zona: 'Z2', sub: 'Aeróbico', lo: 0.80, hi: 1.00 },
+  { zona: 'Z3', sub: 'Umbral', lo: 1.00, hi: 1.04 },
+  { zona: 'Z4', sub: 'VO2max', lo: 1.04, hi: 1.07 }
+];
+function buildLactatePaceTable(vT) {
+  const dists = [50, 100, 200, 400];
+  let h = '<div class="lac-pt-wrap"><table class="lac-pt"><thead><tr><th>Zona</th>' + dists.map(function (d) { return '<th>' + d + ' m</th>'; }).join('') + '</tr></thead><tbody>';
+  LAC_ZONE_FRAC.forEach(function (z, zi) {
+    h += '<tr><td>' + z.zona + '<small>' + z.sub + '</small></td>' + dists.map(function (d) {
+      if (zi === 3 && d === 400) return '<td>—</td>';
+      if (z.lo == null) return '<td>&gt; ' + lacTime(d, vT * z.hi) + '</td>';
+      return '<td>' + lacTime(d, vT * z.hi) + '–' + lacTime(d, vT * z.lo) + '</td>';
+    }).join('') + '</tr>';
+  });
+  return h + '</tbody></table></div>';
+}
+function buildLactateSets(vT) {
+  const sets = [
+    ['Umbral', '16×100 a ' + lacTime(100, vT) + ', 15 s de descanso'],
+    ['Umbral', '8×200 a ' + lacTime(200, vT) + ', 20 s de descanso'],
+    ['Umbral', '4×400 a ' + lacTime(400, vT * 0.99) + ', 30 s de descanso'],
+    ['Base aeróbica', '5×400 a ' + lacTime(400, vT * 0.90) + ', 20 s de descanso'],
+    ['Base aeróbica', '3×800 a ' + lacTime(800, vT * 0.88) + ', 30 s de descanso']
+  ];
+  return '<div class="lac-sets"><div class="lac-sets-t">Series de ejemplo <span>orientativas: ajústalas a tu grupo</span></div>'
+    + sets.map(function (x) { return '<div><b>' + x[0] + '</b> · ' + x[1] + '</div>'; }).join('') + '</div>';
+}
+function lactateCompare(res, histRows) {
+  if (!res || !res.threshold || !res.date || !histRows || !histRows.length) return '';
+  const prev = histRows.filter(function (r) { return r.protocol === res.protocol && r.date < res.date && r.threshold_speed; })
+    .sort(function (a, b) { return a.date < b.date ? 1 : -1; })[0];
+  if (!prev) return '';
+  const d = 100 / prev.threshold_speed - 100 / res.threshold.v;   // >0 = más rápido
+  const txt = Math.abs(d) < 0.3 ? 'Umbral estable respecto al test del ' + formatDateLabel(prev.date) + ' (' + escapeHtml(prev.threshold_pace100) + ').'
+    : 'Umbral <b>' + Math.abs(d).toFixed(1).replace('.', ',') + ' s ' + (d > 0 ? 'más rápido' : 'más lento') + '</b> por cada 100 m que en el test del ' + formatDateLabel(prev.date) + ' (' + escapeHtml(prev.threshold_pace100) + ').';
+  return '<div class="lac-cmp" style="border-left-color:' + (Math.abs(d) < 0.3 ? '#4a6a8a' : d > 0 ? '#1e8449' : '#d97706') + '">' + txt + '</div>';
+}
 
 function paceFromSpeed(v) {
   if (!v || v <= 0) return '--:--';
@@ -4921,6 +4983,13 @@ async function openCoachAdminModal() {
 // Cada dispositivo recuerda en localStorage cuál fue la última que vio.
 // ============================================================
 const CHANGELOG = [
+  { v: 29, date: '2026-11-18', role: 'coach', text: '<div class="nt">Test de lactato: ritmos para la piscina</div><ul>'
+    + '<li>Cada zona trae su ritmo para <b>50, 100, 200 y 400 m</b>.</li>'
+    + '<li><b>Series de ejemplo</b> de umbral y base aeróbica con el ritmo de ese nadador (orientativas).</li>'
+    + '<li>Comparación con su <b>test anterior</b> del mismo protocolo.</li></ul>' },
+  { v: 28, date: '2026-11-17', role: 'coach', text: '<div class="nt">Acceso más seguro y sin bloqueos para siempre</div><ul>'
+    + '<li>Si te equivocas de contraseña <b>5 veces</b>, la cuenta se bloquea <b>15 minutos</b> y se desbloquea sola (antes, 3 fallos la dejaban bloqueada hasta que la reactivara el administrador).</li>'
+    + '<li>Si desde una misma conexión se prueban muchas contraseñas o PIN, esa conexión se frena un rato. El mensaje te dice cuántos minutos faltan.</li></ul>' },
   { v: 27, date: '2026-11-15', role: 'athlete', text: '<div class="nt">Tu progreso, en Inicio</div><ul>'
     + '<li><b>Mi bienestar</b>: tus últimos 14 días con tu media.</li>'
     + '<li><b>Mi carga</b>: tus 4 últimas semanas.</li>'
@@ -5075,7 +5144,7 @@ function latestChangelogV() {
 // lee y los muestra (no puede cambiar el plan ni deshacer la mayoría de edad).
 // ============================================================
 // Versión de la app: subir el número en cada cambio (2.0 = archivo de producción del 26-oct-2026)
-const APP_VERSION = '3.8';
+const APP_VERSION = '4.0';
 const PLAN_URL = 'https://ondrift.app/?landing#precio';
 const LEGAL_TERMS_URL = 'https://ondrift.app/terminos';
 const LEGAL_PRIVACY_URL = 'https://ondrift.app/privacidad';
@@ -5967,7 +6036,7 @@ function buildLactateModal() {
             aerobic: row.aerobic_speed ? { v: row.aerobic_speed, pace100: row.aerobic_pace100 } : null,
             peak: row.peak_speed ? { v: row.peak_speed, pace100: row.peak_pace100 } : null,
             zones: calcLactateZones(row.threshold_speed),
-            steps: row.steps
+            steps: row.steps, date: row.date, protocol: row.protocol
           };
           render();
         };
@@ -6100,7 +6169,7 @@ function buildLactateModal() {
       const aero = calcAerobicThreshold(calcSteps);
       const peak = calcPeakVelocity(calcSteps);
       const zones = th ? calcLactateZones(th.v) : null;
-      S.lactateResult = { threshold: th, aerobic: aero, peak: peak, zones: zones, steps: calcSteps };
+      S.lactateResult = { threshold: th, aerobic: aero, peak: peak, zones: zones, steps: calcSteps, date: todayStr(), protocol: S.lactateProtocol };
       if (!th) { render(); return; }
       const athleteObj = DATA.athletes.find(function(a){ return a.name === S.lactateModalAthlete; });
       try {
@@ -6143,19 +6212,16 @@ function buildLactateModal() {
     res.innerHTML = rows;
     card.appendChild(res);
 
-    const zt = document.createElement('table'); zt.style.cssText = 'width:100%;margin-top:12px;font-size:0.78rem;border-collapse:collapse';
-    zt.innerHTML = '<thead><tr><th style="text-align:left">Zona</th><th>Ritmo/100m</th></tr></thead>';
-    const tb = document.createElement('tbody');
-    S.lactateResult.zones.forEach(function(z) {
-      const tr = document.createElement('tr'); tr.style.borderTop = '1px solid rgba(100,140,180,0.15)';
-      tr.innerHTML = '<td style="padding:6px 0">' + z.zona + '</td><td style="text-align:center;font-weight:700">' + (z.ritmo_lento ? z.ritmo_lento + ' – ' : '≥ ') + z.ritmo_rapido + '</td>';
-      tb.appendChild(tr);
-    });
-    zt.appendChild(tb);
+    const vT = S.lactateResult.threshold.v;
+    const athObj = (DATA.athletes || []).find(function (a) { return a.name === S.lactateModalAthlete; });
+    const histR = athObj && DATA.lactateHistByAthlete ? DATA.lactateHistByAthlete[athObj.id] : null;
+    const zt = document.createElement('div'); zt.style.marginTop = '12px';
+    zt.innerHTML = lactateCompare(S.lactateResult, histR) + buildLactatePaceTable(vT);
     card.appendChild(zt);
     const zn = document.createElement('div'); zn.style.cssText = 'font-size:0.72rem;color:var(--text3);margin-top:6px';
     zn.textContent = 'Zonas orientativas, en % de su ritmo a 4 mmol/L. En el gráfico, la banda verde marca dónde está probablemente su umbral real (3–5 mmol/L). Fuentes: Ayuda > Test de lactato.';
     card.appendChild(zn);
+    const zs = document.createElement('div'); zs.innerHTML = buildLactateSets(S.lactateResult.threshold.v); card.appendChild(zs);
     card.appendChild(buildLactateChart(S.lactateResult.steps, S.lactateResult.threshold, S.lactateResult.aerobic));
   }
   const doneBtn = document.createElement('button'); doneBtn.className = 'btn btn-primary'; doneBtn.textContent = 'Listo'; doneBtn.style.marginTop = '14px';
