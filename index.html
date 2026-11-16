@@ -1024,14 +1024,14 @@
   .ap-str small { font-size: 0.72rem; color: var(--text3); }
   .lac-pt-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .lac-pt { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
-  .lac-pt td small { display: block; font-size: 0.62rem; font-weight: 500; color: var(--text3); }
+  .lac-pt td small { display: block; font-size: 0.62rem; font-weight: 500; color: var(--text2); }
   .lac-pt th { text-align: center; font-weight: 700; color: var(--text); padding: 4px 2px; border-bottom: 1px solid rgba(100,140,180,0.25); }
   .lac-pt th:first-child, .lac-pt td:first-child { text-align: left; }
   .lac-pt td { text-align: center; padding: 6px 2px; border-bottom: 1px solid rgba(100,140,180,0.12); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .lac-pt td:first-child { white-space: normal; font-weight: 600; color: var(--text); }
   .lac-sets { margin-top: 12px; font-size: 0.78rem; color: var(--text2); line-height: 1.6; }
   .lac-sets-t { font-weight: 800; color: var(--text); }
-  .lac-sets-t span { font-weight: 500; font-size: 0.7rem; color: var(--text3); margin-left: 6px; }
+  .lac-sets-t span { font-weight: 500; font-size: 0.7rem; color: var(--text2); margin-left: 6px; }
   .lac-sets b { color: var(--text); }
   .lac-cmp { margin-bottom: 10px; padding: 7px 10px; border-left: 3px solid; border-radius: 6px; background: rgba(255,255,255,0.55); font-size: 0.8rem; color: var(--text2); }
   .help-art { margin-bottom: 10px; padding: 0; overflow: hidden; }
@@ -9164,7 +9164,7 @@ function buildLactateChart(steps, threshold, aerobic) {
       '<rect x="'+(PAD.left+iW-lw)+'" y="'+(ly-12)+'" width="'+lw+'" height="12" fill="rgba(255,255,255,0.85)"/>' +
       '<text x="'+(PAD.left+iW-4)+'" y="'+(ly-3)+'" font-size="9" fill="'+color+'" font-weight="700" text-anchor="end">'+label+'</text>';
   };
-  const refLines = refLine(4.0, '#c0392b', '4.0 · OBLA') + refLine(2.0, '#2980b9', '2.0 · LT1');
+  const refLines = refLine(4.0, '#c0392b', '4.0 · OBLA') + refLine(2.0, '#b45309', '2.0 · LT1');
 
   // Banda sombreada: el umbral real de cada nadador está "por esta zona", no en una
   // línea exacta. Umbral: entre 3 y 5 mmol/L; LT1: entre 1,5 y 2,5 mmol/L.
@@ -9176,9 +9176,9 @@ function buildLactateChart(steps, threshold, aerobic) {
     const txt = (a ? a.pace100.replace(/\.\d+$/, '') : '…') + '–' + (b ? b.pace100.replace(/\.\d+$/, '') : '…');
     const full = label + ' ' + txt, lw = full.length * 5.0 + 14;
     const cx = Math.min(PAD.left + iW - lw / 2, Math.max(PAD.left + lw / 2, (x1 + x2) / 2));
-    return '<rect x="'+x1+'" y="'+PAD.top+'" width="'+(x2-x1)+'" height="'+iH+'" fill="'+color+'" opacity="0.14"/>' +
-      '<line x1="'+x1+'" y1="'+PAD.top+'" x2="'+x1+'" y2="'+(PAD.top+iH)+'" stroke="'+color+'" stroke-width="1" opacity="0.35"/>' +
-      '<line x1="'+x2+'" y1="'+PAD.top+'" x2="'+x2+'" y2="'+(PAD.top+iH)+'" stroke="'+color+'" stroke-width="1" opacity="0.35"/>' +
+    return '<rect x="'+x1+'" y="'+PAD.top+'" width="'+(x2-x1)+'" height="'+iH+'" fill="'+color+'" opacity="0.18"/>' +
+      '<line x1="'+x1+'" y1="'+PAD.top+'" x2="'+x1+'" y2="'+(PAD.top+iH)+'" stroke="'+color+'" stroke-width="1" opacity="0.55"/>' +
+      '<line x1="'+x2+'" y1="'+PAD.top+'" x2="'+x2+'" y2="'+(PAD.top+iH)+'" stroke="'+color+'" stroke-width="1" opacity="0.55"/>' +
       '<rect x="'+(cx-lw/2)+'" y="'+labelY+'" width="'+lw+'" height="15" rx="7" fill="'+color+'"/>' +
       '<text x="'+cx+'" y="'+(labelY+11)+'" font-size="8.5" font-weight="700" fill="white" text-anchor="middle">'+full+'</text>';
   }
@@ -9190,11 +9190,11 @@ function buildLactateChart(steps, threshold, aerobic) {
       '<rect x="'+(tx-24)+'" y="'+labelY+'" width="48" height="15" rx="7" fill="'+color+'"/>' +
       '<text x="'+tx+'" y="'+(labelY+11)+'" font-size="8.5" font-weight="700" fill="white" text-anchor="middle">'+th.pace100+'</text>';
   }
-  const markers = band(3.0, 5.0, '#1e8449', 'Umbral', PAD.top - 22) + band(1.5, 2.5, '#2980b9', 'LT1', PAD.top - 4);
+  const markers = band(3.0, 5.0, '#1e8449', 'Umbral', PAD.top - 22) + band(1.5, 2.5, '#b45309', 'LT1', PAD.top - 4);
 
-  const xLabels = pts0.map(function(p){ return '<text x="'+xPos(p.v)+'" y="'+(H-6)+'" font-size="8.5" fill="#4a6a8a" text-anchor="middle">'+p.v.toFixed(2)+'</text>'; }).join('');
-  const axisTitle = '<text x="'+(PAD.left+iW/2)+'" y="'+(H+2)+'" font-size="8" fill="#7a9ab8" text-anchor="middle"></text>' +
-    '<text x="4" y="'+(PAD.top+iH/2)+'" font-size="8" fill="#7a9ab8" text-anchor="middle" transform="rotate(-90 4 '+(PAD.top+iH/2)+')">mmol/L</text>';
+  const xLabels = pts0.map(function(p){ return '<text x="'+xPos(p.v)+'" y="'+(H-6)+'" font-size="8.5" fill="#3a556e" text-anchor="middle">'+p.v.toFixed(2)+'</text>'; }).join('');
+  const axisTitle = '<text x="'+(PAD.left+iW/2)+'" y="'+(H+2)+'" font-size="8" fill="#4a6a8a" text-anchor="middle"></text>' +
+    '<text x="4" y="'+(PAD.top+iH/2)+'" font-size="8" fill="#4a6a8a" text-anchor="middle" transform="rotate(-90 4 '+(PAD.top+iH/2)+')">mmol/L</text>';
 
   const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.setAttribute('viewBox','0 0 '+W+' '+H); svg.setAttribute('width','100%'); svg.setAttribute('height',H);
@@ -9202,13 +9202,14 @@ function buildLactateChart(steps, threshold, aerobic) {
     '<defs><linearGradient id="lacFill" x1="0" y1="0" x2="0" y2="1">' +
       '<stop offset="0%" stop-color="#1a6fa8" stop-opacity="0.28"/><stop offset="100%" stop-color="#1a6fa8" stop-opacity="0"/>' +
     '</linearGradient></defs>' +
+    '<rect x="'+PAD.left+'" y="'+PAD.top+'" width="'+iW+'" height="'+iH+'" rx="6" fill="#ffffff" opacity="0.9"/>' +
     grid + refLines +
     '<path d="'+areaPath+'" fill="url(#lacFill)"/>' +
     '<path d="'+linePath+'" fill="none" stroke="#1a6fa8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
     markers + dots + xLabels + axisTitle;
 
   const card = document.createElement('div'); card.className = 'card';
-  card.style.cssText = 'padding:14px 10px 6px;margin-top:12px;background:linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.55) 100%)';
+  card.style.cssText = 'padding:14px 10px 6px;margin-top:12px;background:rgba(255,255,255,0.94)';
   const cap = document.createElement('div'); cap.style.cssText = 'font-size:0.72rem;font-weight:700;color:var(--text2);text-align:center;margin-bottom:4px;letter-spacing:0.5px';
   cap.textContent = 'CURVA DE LACTATO — velocidad (m/s)';
   card.appendChild(cap); card.appendChild(svg);
