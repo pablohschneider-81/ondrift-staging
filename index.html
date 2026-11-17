@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
-<title>Ondrift STAGING v3.8</title>
+<title>Ondrift STAGING v4.1</title>
 <style>
   :root {
     --bg: #cfdbe9;
@@ -1022,6 +1022,18 @@
   .ap-str { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 4px 0; }
   .ap-str b { display: block; font-size: 0.82rem; color: var(--text); }
   .ap-str small { font-size: 0.72rem; color: var(--text3); }
+  .lac-pt-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .lac-pt { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+  .lac-pt td small { display: block; font-size: 0.62rem; font-weight: 500; color: var(--text2); }
+  .lac-pt th { text-align: center; font-weight: 700; color: var(--text); padding: 4px 2px; border-bottom: 1px solid rgba(100,140,180,0.25); }
+  .lac-pt th:first-child, .lac-pt td:first-child { text-align: left; }
+  .lac-pt td { text-align: center; padding: 6px 2px; border-bottom: 1px solid rgba(100,140,180,0.12); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .lac-pt td:first-child { white-space: normal; font-weight: 600; color: var(--text); }
+  .lac-sets { margin-top: 12px; font-size: 0.78rem; color: var(--text2); line-height: 1.6; }
+  .lac-sets-t { font-weight: 800; color: var(--text); }
+  .lac-sets-t span { font-weight: 500; font-size: 0.7rem; color: var(--text2); margin-left: 6px; }
+  .lac-sets b { color: var(--text); }
+  .lac-cmp { margin-bottom: 10px; padding: 7px 10px; border-left: 3px solid; border-radius: 6px; background: rgba(255,255,255,0.55); font-size: 0.8rem; color: var(--text2); }
   .help-art { margin-bottom: 10px; padding: 0; overflow: hidden; }
   .help-art > summary { list-style: none; cursor: pointer; padding: 16px 18px; font-weight: 700; color: var(--text); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
   .help-art > summary::-webkit-details-marker { display: none; }
@@ -1605,7 +1617,6 @@ let SB_LAST_ERROR = ''; // texto del último error devuelto por PostgREST
 let SB_ACCESS_TOKEN = null; // no restauramos token viejo al arrancar: caducaría y daría un 401 falso ("clave revocada"). El coach re-loguea por sesión.
 let SB_REFRESH_TOKEN = null; // el nadador sí: su refresh_token permite renovar el access_token caducado sin volver a pedir el PIN.
 let LAST_AUTH_ERROR = null; // 'confirm' | 'creds' | 'locked' | 'offline' | 'busy'
-let LAST_AUTH_MSG = '';    // texto del servidor para bloqueos (minutos que faltan)
 let COACH_CREDS = null; // {email,password} SOLO en memoria durante la sesion; nunca se guarda en disco ni se hardcodea
 
 // Tras iniciar sesión: mira el estado real del coach (pending/approved) y quién es admin.
@@ -1661,12 +1672,7 @@ async function coachSignIn(email, password) {
     });
     if (!res.ok) {
       const t = await res.text(); console.error('Coach auth error', t);
-      // 423 = cuenta bloqueada (temporal o permanente) · 429 con retry_secs = demasiados intentos
-      // desde esta conexión. El servidor manda el texto con los minutos que faltan: se muestra tal cual.
-      let j = null; try { j = JSON.parse(t); } catch (e) {}
-      LAST_AUTH_MSG = (j && j.error && (res.status === 423 || (res.status === 429 && j.retry_secs))) ? j.error : '';
       if (res.status === 423) { LAST_AUTH_ERROR = 'locked'; return false; }
-      if (res.status === 429 && j && j.retry_secs) { LAST_AUTH_ERROR = 'locked'; return false; }
       if (res.status === 429 || res.status >= 500) { LAST_AUTH_ERROR = 'busy'; return false; }
       LAST_AUTH_ERROR = (t && t.indexOf('not confirmed') !== -1) ? 'confirm' : 'creds';
       return false;
@@ -2270,28 +2276,44 @@ async function dbGetDayWellness(date) {
   if (rows) rows.forEach(function(r) {
     const name = r.athletes && r.athletes.name;
     if (!name) return;
-    result[name] = { sleep: r.sleep, soreness: r.soreness, fatigue: r.fatigue, stress: r.stress, note: r.note };
+    result[name] = { sleep: r.sleep, soreness: r.soreness, fatigue: r.fatigue, stress: r.stress, note: r.note, sleep_band: r.sleep_band };
   });
   _wellCache[date] = result;
   return result;
 }
-async function dbSaveWellness(date, athleteName, sleep, soreness, fatigue, stress, note) {
+async function dbSaveWellness(date, athleteName, sleep, soreness, fatigue, stress, note, sleepBand) {
   const athleteId = await dbAthleteId(athleteName);
   if (!athleteId) return null;
-  const res = await sbFetch('wellness_entries?on_conflict=athlete_id,date', {
-    method: 'POST',
-    prefer: 'resolution=merge-duplicates,return=representation',
-    body: JSON.stringify({ athlete_id: athleteId, date: date, sleep: sleep, soreness: soreness, fatigue: fatigue, stress: stress, note: note || '' })
-  });
+  const body = { athlete_id: athleteId, date: date, sleep: sleep, soreness: soreness, fatigue: fatigue, stress: stress, note: note || '' };
+  body.sleep_band = sleepBand != null ? sleepBand : null;   // null también al editar y quitar las horas
+  const send = function () {
+    return sbFetch('wellness_entries?on_conflict=athlete_id,date', {
+      method: 'POST',
+      prefer: 'resolution=merge-duplicates,return=representation',
+      body: JSON.stringify(body)
+    });
+  };
+  let res = await send();
+  // Si la columna sleep_band aún no existe en la base, el check-in se guarda igual sin las horas
+  if (!res && SB_STATUS !== 'offline' && /sleep_band/.test(SB_LAST_ERROR || '')) { delete body.sleep_band; res = await send(); }
   delete _wellCache[date];
   return res;
+}
+async function dbGetMyBirth(name) {
+  try {
+    const id = await dbAthleteId(name);
+    if (!id) return null;
+    const r = await sbFetch('athletes?select=birth_date&id=eq.' + id);
+    return (r && r[0] && r[0].birth_date) || null;
+  } catch (e) { return null; }
 }
 async function dbGetAthleteWellnessHist(name) {
   const athleteId = await dbAthleteId(name);
   if (!athleteId) return [];
   const from = new Date(); from.setDate(from.getDate() - 27);   // 28 días: gráfico de 14 + su media
   const fromS = from.getFullYear()+'-'+String(from.getMonth()+1).padStart(2,'0')+'-'+String(from.getDate()).padStart(2,'0');
-  const rows = await sbFetch('wellness_entries?athlete_id=eq.' + athleteId + '&select=date,sleep,soreness,fatigue,stress&date=gte.' + fromS + '&order=date.asc');
+  let rows = await sbFetch('wellness_entries?athlete_id=eq.' + athleteId + '&select=date,sleep,soreness,fatigue,stress,sleep_band&date=gte.' + fromS + '&order=date.asc');
+  if (!rows) rows = await sbFetch('wellness_entries?athlete_id=eq.' + athleteId + '&select=date,sleep,soreness,fatigue,stress&date=gte.' + fromS + '&order=date.asc');
   return rows || [];
 }
 
@@ -2801,6 +2823,7 @@ let S = {
   // wellness check-in
   wellSel: { sleep:null, soreness:null, fatigue:null, stress:null },
   wellNote: '',
+  wellSleepBand: null,   // horas dormidas, por tramos (1..5), opcional
   wellEditing: false,
   // modals
   commentAthlete: null,
@@ -3007,6 +3030,7 @@ async function loadData() {
   if (S.athleteName) {
     tasks.push(dbGetAthleteHist(S.athleteName).then(h => { DATA.athleteHist[S.athleteName] = h; }));
     tasks.push(dbGetAthleteWellnessHist(S.athleteName).then(w => { DATA.athleteWellHist[S.athleteName] = w; }));
+    tasks.push(dbGetMyBirth(S.athleteName).then(b => { DATA.myBirth = DATA.myBirth || {}; DATA.myBirth[S.athleteName] = b; }));
   }
   await Promise.all(tasks);
   if (getRPEQueue().length > 0) flushRPEQueue(); // no bloquea el render; corre en paralelo
@@ -3058,7 +3082,9 @@ async function checkNewVersion() {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
     if (!r.ok) return;
     const v = (await r.text()).trim();
-    if (/^\d+(\.\d+)*$/.test(v) && v !== APP_VERSION && parseFloat(v) > parseFloat(APP_VERSION)) {
+    const newer = function (x, y) { const a = x.split('.').map(Number), b = y.split('.').map(Number);   // 3.10 > 3.9
+      for (let i = 0; i < Math.max(a.length, b.length); i++) { if ((a[i] || 0) !== (b[i] || 0)) return (a[i] || 0) > (b[i] || 0); } return false; };
+    if (/^\d+(\.\d+)*$/.test(v) && v !== APP_VERSION && newer(v, APP_VERSION)) {
       if (S.newVersion !== v) { S.newVersion = v; render(); }
     }
   } catch (e) {}
@@ -3496,6 +3522,54 @@ const LACTATE_PROTOCOLS = {
     help: '3 bloques de 8×100. Lactato: basal + al final de cada bloque + a los 3\' post-esfuerzo (5-6 tomas). Resolución menor que 7x200/4x400 (solo 3 puntos de intensidad reales).'
   }
 };
+
+// Tiempo para una distancia a una velocidad: m:ss (50 m con décimas)
+function lacTime(dist, v) {
+  if (!v || v <= 0) return '—';
+  const t = dist / v, m = Math.floor(t / 60), sec = t - m * 60;
+  if (dist <= 50) return t < 60 ? t.toFixed(1) : m + ':' + (sec < 10 ? '0' : '') + sec.toFixed(1);
+  const r = Math.round(sec); return (r === 60 ? (m + 1) + ':00' : m + ':' + (r < 10 ? '0' : '') + r);
+}
+// Zonas por fracción del umbral (las mismas que calcLactateZones) para la tabla por distancias
+const LAC_ZONE_FRAC = [
+  { zona: 'Z1', sub: 'Recup.', lo: null, hi: 0.80 },
+  { zona: 'Z2', sub: 'Aeróbico', lo: 0.80, hi: 1.00 },
+  { zona: 'Z3', sub: 'Umbral', lo: 1.00, hi: 1.04 },
+  { zona: 'Z4', sub: 'VO2max', lo: 1.04, hi: 1.07 }
+];
+function buildLactatePaceTable(vT) {
+  const dists = [50, 100, 200, 400];
+  let h = '<div class="lac-pt-wrap"><table class="lac-pt"><thead><tr><th>Zona</th>' + dists.map(function (d) { return '<th>' + d + ' m</th>'; }).join('') + '</tr></thead><tbody>';
+  LAC_ZONE_FRAC.forEach(function (z, zi) {
+    h += '<tr><td>' + z.zona + '<small>' + z.sub + '</small></td>' + dists.map(function (d) {
+      if (zi === 3 && d === 400) return '<td>—</td>';
+      if (z.lo == null) return '<td>&gt; ' + lacTime(d, vT * z.hi) + '</td>';
+      return '<td>' + lacTime(d, vT * z.hi) + '–' + lacTime(d, vT * z.lo) + '</td>';
+    }).join('') + '</tr>';
+  });
+  return h + '</tbody></table></div>';
+}
+function buildLactateSets(vT) {
+  const sets = [
+    ['Umbral', '16×100 a ' + lacTime(100, vT) + ', 15 s de descanso'],
+    ['Umbral', '8×200 a ' + lacTime(200, vT) + ', 20 s de descanso'],
+    ['Umbral', '4×400 a ' + lacTime(400, vT * 0.99) + ', 30 s de descanso'],
+    ['Base aeróbica', '5×400 a ' + lacTime(400, vT * 0.90) + ', 20 s de descanso'],
+    ['Base aeróbica', '3×800 a ' + lacTime(800, vT * 0.88) + ', 30 s de descanso']
+  ];
+  return '<div class="lac-sets"><div class="lac-sets-t">Series de ejemplo <span>orientativas: ajústalas a tu grupo</span></div>'
+    + sets.map(function (x) { return '<div><b>' + x[0] + '</b> · ' + x[1] + '</div>'; }).join('') + '</div>';
+}
+function lactateCompare(res, histRows) {
+  if (!res || !res.threshold || !res.date || !histRows || !histRows.length) return '';
+  const prev = histRows.filter(function (r) { return r.protocol === res.protocol && r.date < res.date && r.threshold_speed; })
+    .sort(function (a, b) { return a.date < b.date ? 1 : -1; })[0];
+  if (!prev) return '';
+  const d = 100 / prev.threshold_speed - 100 / res.threshold.v;   // >0 = más rápido
+  const txt = Math.abs(d) < 0.3 ? 'Umbral estable respecto al test del ' + formatDateLabel(prev.date) + ' (' + escapeHtml(prev.threshold_pace100) + ').'
+    : 'Umbral <b>' + Math.abs(d).toFixed(1).replace('.', ',') + ' s ' + (d > 0 ? 'más rápido' : 'más lento') + '</b> por cada 100 m que en el test del ' + formatDateLabel(prev.date) + ' (' + escapeHtml(prev.threshold_pace100) + ').';
+  return '<div class="lac-cmp" style="border-left-color:' + (Math.abs(d) < 0.3 ? '#4a6a8a' : d > 0 ? '#1e8449' : '#d97706') + '">' + txt + '</div>';
+}
 
 function paceFromSpeed(v) {
   if (!v || v <= 0) return '--:--';
@@ -4371,7 +4445,7 @@ function buildPin() {
     err.textContent = (LAST_AUTH_ERROR === 'confirm')
       ? 'Tienes que confirmar tu email antes de entrar. Busca el correo de confirmaci\u00f3n en tu bandeja (y en spam).'
       : (LAST_AUTH_ERROR === 'locked')
-      ? (LAST_AUTH_MSG || 'Cuenta bloqueada por intentos fallidos. Ped\u00ed a tu entrenador/admin que la reactive.')
+      ? 'Cuenta bloqueada por intentos fallidos. Ped\u00ed a tu entrenador/admin que la reactive.'
       : (LAST_AUTH_ERROR === 'offline')
       ? 'Sin conexi\u00f3n. Revisa tu internet e int\u00e9ntalo de nuevo.'
       : (LAST_AUTH_ERROR === 'busy')
@@ -4922,6 +4996,14 @@ async function openCoachAdminModal() {
 // Cada dispositivo recuerda en localStorage cuál fue la última que vio.
 // ============================================================
 const CHANGELOG = [
+  { v: 29, date: '2026-11-18', role: 'athlete', text: '<div class="nt">Sueño y RPE</div><ul>'
+    + '<li>En el check-in puedes marcar <b>cuántas horas has dormido</b> (opcional) y ver cuántas noches de la semana llegas a lo recomendado para tu edad.</li>'
+    + '<li><b>Tu RPE frente al objetivo</b>: en Inicio ves si tus sesiones te cuestan más o menos de lo previsto.</li>'
+    + '<li>En Mi RPE, una guía rápida: <b>¿Cómo elijo mi RPE?</b></li></ul>' },
+  { v: 28, date: '2026-11-17', role: 'coach', text: '<div class="nt">Test de lactato: ritmos para la piscina</div><ul>'
+    + '<li>Cada zona trae su ritmo para <b>50, 100, 200 y 400 m</b>.</li>'
+    + '<li><b>Series de ejemplo</b> de umbral y base aeróbica con el ritmo de ese nadador (orientativas).</li>'
+    + '<li>Comparación con su <b>test anterior</b> del mismo protocolo.</li></ul>' },
   { v: 27, date: '2026-11-15', role: 'athlete', text: '<div class="nt">Tu progreso, en Inicio</div><ul>'
     + '<li><b>Mi bienestar</b>: tus últimos 14 días con tu media.</li>'
     + '<li><b>Mi carga</b>: tus 4 últimas semanas.</li>'
@@ -5076,7 +5158,7 @@ function latestChangelogV() {
 // lee y los muestra (no puede cambiar el plan ni deshacer la mayoría de edad).
 // ============================================================
 // Versión de la app: subir el número en cada cambio (2.0 = archivo de producción del 26-oct-2026)
-const APP_VERSION = '3.8';
+const APP_VERSION = '4.1';
 const PLAN_URL = 'https://ondrift.app/?landing#precio';
 const LEGAL_TERMS_URL = 'https://ondrift.app/terminos';
 const LEGAL_PRIVACY_URL = 'https://ondrift.app/privacidad';
@@ -6090,7 +6172,7 @@ function buildLactateModal() {
             aerobic: row.aerobic_speed ? { v: row.aerobic_speed, pace100: row.aerobic_pace100 } : null,
             peak: row.peak_speed ? { v: row.peak_speed, pace100: row.peak_pace100 } : null,
             zones: calcLactateZones(row.threshold_speed),
-            steps: row.steps
+            steps: row.steps, date: row.date, protocol: row.protocol
           };
           render();
         };
@@ -6223,7 +6305,7 @@ function buildLactateModal() {
       const aero = calcAerobicThreshold(calcSteps);
       const peak = calcPeakVelocity(calcSteps);
       const zones = th ? calcLactateZones(th.v) : null;
-      S.lactateResult = { threshold: th, aerobic: aero, peak: peak, zones: zones, steps: calcSteps };
+      S.lactateResult = { threshold: th, aerobic: aero, peak: peak, zones: zones, steps: calcSteps, date: todayStr(), protocol: S.lactateProtocol };
       if (!th) { render(); return; }
       const athleteObj = DATA.athletes.find(function(a){ return a.name === S.lactateModalAthlete; });
       try {
@@ -6266,19 +6348,16 @@ function buildLactateModal() {
     res.innerHTML = rows;
     card.appendChild(res);
 
-    const zt = document.createElement('table'); zt.style.cssText = 'width:100%;margin-top:12px;font-size:0.78rem;border-collapse:collapse';
-    zt.innerHTML = '<thead><tr><th style="text-align:left">Zona</th><th>Ritmo/100m</th></tr></thead>';
-    const tb = document.createElement('tbody');
-    S.lactateResult.zones.forEach(function(z) {
-      const tr = document.createElement('tr'); tr.style.borderTop = '1px solid rgba(100,140,180,0.15)';
-      tr.innerHTML = '<td style="padding:6px 0">' + z.zona + '</td><td style="text-align:center;font-weight:700">' + (z.ritmo_lento ? z.ritmo_lento + ' – ' : '≥ ') + z.ritmo_rapido + '</td>';
-      tb.appendChild(tr);
-    });
-    zt.appendChild(tb);
+    const vT = S.lactateResult.threshold.v;
+    const athObj = (DATA.athletes || []).find(function (a) { return a.name === S.lactateModalAthlete; });
+    const histR = athObj && DATA.lactateHistByAthlete ? DATA.lactateHistByAthlete[athObj.id] : null;
+    const zt = document.createElement('div'); zt.style.marginTop = '12px';
+    zt.innerHTML = lactateCompare(S.lactateResult, histR) + buildLactatePaceTable(vT);
     card.appendChild(zt);
     const zn = document.createElement('div'); zn.style.cssText = 'font-size:0.72rem;color:var(--text3);margin-top:6px';
     zn.textContent = 'Zonas orientativas, en % de su ritmo a 4 mmol/L. En el gráfico, la banda verde marca dónde está probablemente su umbral real (3–5 mmol/L). Fuentes: Ayuda > Test de lactato.';
     card.appendChild(zn);
+    const zs = document.createElement('div'); zs.innerHTML = buildLactateSets(S.lactateResult.threshold.v); card.appendChild(zs);
     card.appendChild(buildLactateChart(S.lactateResult.steps, S.lactateResult.threshold, S.lactateResult.aerobic));
   }
   const doneBtn = document.createElement('button'); doneBtn.className = 'btn btn-primary'; doneBtn.textContent = 'Listo'; doneBtn.style.marginTop = '14px';
@@ -7957,6 +8036,143 @@ function buildHoyStrip() {
   return wrap;
 }
 
+// ── Horas de sueño (opcional en el check-in) y RPE frente al objetivo ──────────
+// Tramos: 1 <6 h · 2 6–7 · 3 7–8 · 4 8–9 · 5 9+
+const SLEEP_BANDS = [{ v:1, lbl:'<6' }, { v:2, lbl:'6–7' }, { v:3, lbl:'7–8' }, { v:4, lbl:'8–9' }, { v:5, lbl:'9+' }];
+function sleepTargetBand(name) {
+  // Mínimo recomendado por edad: 9 h hasta 12 años y 8 h de 13 a 17 (AASM, Paruthi 2016);
+  // 7 h desde los 18 (AASM/SRS, Watson 2015). Sin fecha de nacimiento: 8 h (la mayoría son menores).
+  const age = athleteAge(DATA.myBirth && DATA.myBirth[name]);
+  if (age != null && age < 13) return { band: 5, h: 9 };
+  if (age != null && age >= 18) return { band: 3, h: 7 };
+  return { band: 4, h: 8 };
+}
+function sleepWeekHtml(name) {
+  const hist = DATA.athleteWellHist[name] || [];
+  const from = dateOffsetA(todayStr(), -6);
+  const rows = hist.filter(function (h) { return h.date >= from && h.sleep_band != null; });
+  let txt;
+  if (rows.length < 3) {
+    txt = 'Marca tus horas de sueño unos días para ver tu resumen semanal.';
+  } else {
+    const t = sleepTargetBand(name);
+    const ok = rows.filter(function (h) { return h.sleep_band >= t.band; }).length;
+    txt = 'Sueño esta semana: <strong>' + ok + ' de ' + rows.length + '</strong> noches con ' + t.h + ' h o más';
+  }
+  return '<div style="font-size:0.66rem;color:#5a7a9a;margin-top:3px;line-height:1.35">' + txt + '</div>';
+}
+function buildSleepHoursRow() {
+  const row = document.createElement('div'); row.style.cssText = 'margin:-4px 0 12px';
+  row.innerHTML = '<div style="font-size:0.66rem;color:#5a7a9a;font-weight:600;margin-bottom:4px">¿Cuántas horas has dormido? (opcional)</div>';
+  const chips = document.createElement('div'); chips.style.cssText = 'display:flex;gap:6px';
+  SLEEP_BANDS.forEach(function (b) {
+    const on = S.wellSleepBand === b.v;
+    const c = document.createElement('button'); c.type = 'button';
+    c.style.cssText = 'all:unset;box-sizing:border-box;flex:1;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.78rem;cursor:pointer;border:1px solid ' + (on ? '#2980b9' : 'rgba(100,150,190,0.3)') + ';background:' + (on ? 'rgba(41,128,185,0.14)' : 'rgba(255,255,255,0.5)') + ';color:' + (on ? '#1a5f8f' : '#4a6a8a');
+    c.textContent = b.lbl;
+    c.setAttribute('aria-pressed', on ? 'true' : 'false');
+    c.onclick = function () { S.wellSleepBand = on ? null : b.v; render(); };
+    chips.appendChild(c);
+  });
+  row.appendChild(chips);
+  return row;
+}
+function chartCardA(title, svg, foot) {
+  const wrap = document.createElement('div');
+  const st = document.createElement('div'); st.className = 'section-title'; st.style.marginTop = '14px'; st.textContent = title;
+  wrap.appendChild(st);
+  const card = document.createElement('div'); card.className = 'card';
+  card.style.cssText = 'padding:12px 8px;background:rgba(255,255,255,0.65);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.82);box-shadow:0 2px 16px rgba(100,140,180,0.15),inset 0 1px 0 rgba(255,255,255,0.9)';
+  card.innerHTML = '<svg viewBox="0 0 320 130" width="100%" height="130">' + svg + '</svg>' +
+    '<div style="font-size:0.72rem;color:#4a6a8a;line-height:1.45;padding:6px 10px 2px">' + foot + '</div>';
+  wrap.appendChild(card);
+  return wrap;
+}
+function sessTargetRPE(date, slot) {
+  const n = normDay(DATA.sessions && DATA.sessions[date]);
+  return n && n[slot] && n[slot].targetRPE != null ? n[slot].targetRPE : null;
+}
+function rpeCoverageHtml(hist) {
+  // RPE registrado en N de las últimas M sesiones planificadas (14 días; las de hoy sin registrar no cuentan)
+  const t = todayStr();
+  const have = {};
+  (hist || []).forEach(function (h) { have[h.date + '|' + h.slot] = 1; });
+  let total = 0, logged = 0;
+  for (let i = 13; i >= 0; i--) {
+    const ds = dateOffsetA(t, -i);
+    daySlots(DATA.sessions && DATA.sessions[ds]).forEach(function (sl) {
+      const ok = !!have[ds + '|' + sl.slot];
+      if (ds === t && !ok) return;
+      total++; if (ok) logged++;
+    });
+  }
+  if (total < 4 || logged / total < 0.8) return '';   // con cobertura baja no sale nada: ni elogio ni reproche
+  return 'RPE registrado en <strong>' + logged + ' de tus últimas ' + total + ' sesiones</strong>.';
+}
+function buildRpeVsTargetA(hist) {
+  const rows = [];
+  (hist || []).slice(-14).forEach(function (h) {
+    const t = sessTargetRPE(h.date, h.slot);
+    if (t != null && h.rpe != null) rows.push({ date: h.date, d: h.rpe - t });
+  });
+  const last = rows.slice(-10);
+  if (last.length < 3) return null;
+  const W = 320, mid = 62, k = 12, n = last.length, step = (W - 40) / n, bw = Math.min(22, step - 6);
+  let svg = '<line x1="14" y1="' + mid + '" x2="306" y2="' + mid + '" stroke="rgba(100,140,180,0.35)" stroke-width="1"/>';
+  let sum = 0;
+  last.forEach(function (r, i) {
+    sum += r.d;
+    const x = 20 + (i + 0.5) * step;
+    const dd = Math.max(-4, Math.min(4, r.d));
+    const h = Math.abs(dd) * k;
+    const y = dd >= 0 ? mid - h : mid;
+    const col = r.d > 1 ? '#c0621a' : (r.d < -1 ? '#2980b9' : '#7d93a8');
+    const ty = dd >= 0 ? y - 3 : y + h + 10;
+    svg += '<rect x="' + (x - bw / 2) + '" y="' + y + '" width="' + bw + '" height="' + Math.max(h, 2) + '" rx="3" fill="' + col + '"/>' +
+      '<text x="' + x + '" y="' + ty + '" font-size="9" font-weight="700" fill="#3a5a7a" text-anchor="middle">' + (r.d > 0 ? '+' : '') + r.d + '</text>' +
+      '<text x="' + x + '" y="124" font-size="8" fill="#3a5a7a" text-anchor="middle">' + dateObj(r.date).getDate() + '</text>';
+  });
+  const avg = sum / n;
+  const avgTxt = (avg > 0 ? '+' : '') + avg.toFixed(1).replace('.', ',');
+  let msg;
+  if (avg > 1) msg = 'Tu esfuerzo ha sido <strong>mayor</strong> de lo previsto. Si una sesión te cuesta más de lo normal, apúntalo en la nota del RPE.';
+  else if (avg < -1) msg = 'Tu esfuerzo ha sido <strong>menor</strong> de lo previsto.';
+  else msg = 'Tu esfuerzo va <strong>en línea</strong> con lo que busca el entrenador.';
+  const cov = rpeCoverageHtml(hist);
+  return chartCardA('Tu RPE frente al objetivo', svg,
+    'Cada barra es tu RPE menos el RPE objetivo de la sesión · media <strong>' + avgTxt + '</strong><br>' + msg + (cov ? '<br>' + cov + ' Vas muy constante, sigue así.' : ''));
+}
+function buildRpeHelpA() {
+  const det = document.createElement('details'); det.style.cssText = 'margin-top:10px';
+  const sm = document.createElement('summary'); sm.style.cssText = 'font-size:0.78rem;font-weight:700;color:var(--text2);cursor:pointer;padding:6px 0';
+  sm.textContent = '¿Cómo elijo mi RPE?';
+  det.appendChild(sm);
+  const body = document.createElement('div'); body.style.cssText = 'font-size:0.78rem;color:var(--text2);line-height:1.6;padding:2px 0 6px';
+  body.innerHTML = '<strong>1–2</strong> muy fácil: podrías hablar sin parar.<br><strong>3–4</strong> suave: hablas con frases largas.<br>' +
+    '<strong>5–6</strong> intenso pero sostenible: solo frases cortas.<br><strong>7–8</strong> duro: respiración fuerte, hablar cuesta.<br>' +
+    '<strong>9–10</strong> máximo: no podrías seguir mucho más.<br>Piensa en <strong>toda la sesión</strong>, no solo en la última serie.';
+  det.appendChild(body);
+  return det;
+}
+function buildRpeAfterA(date, slotKey, rpe, thanks) {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'text-align:center;font-size:0.8rem;color:#4a6a8a;line-height:1.5;margin-top:12px';
+  const t = sessTargetRPE(date, slotKey);
+  let html = '';
+  if (t != null && rpe != null) {
+    const dlt = rpe - t;
+    if (dlt === 0) html += 'Justo el esfuerzo previsto (objetivo ' + t + ').';
+    else if (dlt > 0) html += 'Ha costado <strong>+' + dlt + '</strong> sobre el objetivo (' + t + '). Si te ha costado más de lo normal, cuéntaselo al entrenador.';
+    else html += 'Ha costado <strong>' + Math.abs(dlt) + '</strong> por debajo del objetivo (' + t + ').';
+  }
+  if (thanks) html += (html ? '<br>' : '') + 'Gracias por registrarlo: cada dato ayuda a que el entrenador te conozca mejor.';
+  const cov = rpeCoverageHtml(DATA.athleteHist[S.athleteName]);
+  if (cov) html += (html ? '<br>' : '') + cov + ' Vas muy constante, sigue así.';
+  if (!html) return null;
+  wrap.innerHTML = html;
+  return wrap;
+}
+
 function buildWellnessCheckin() {
   const w = todayWellness(S.athleteName);
   const card = document.createElement('div');
@@ -7983,13 +8199,13 @@ function buildWellnessCheckin() {
         '<div style="flex:1;min-width:0">' +
           '<div style="font-size:0.62rem;font-weight:800;letter-spacing:1.5px;color:#1e8449;text-transform:uppercase">✓ Check-in de hoy</div>' +
           '<div style="font-size:0.9rem;font-weight:700;color:'+col+';margin-top:2px">'+wellCompLabel(sum)+'</div>' +
-          '<div style="font-size:0.66rem;color:#7a9ab8;margin-top:3px;line-height:1.35">'+baseTxt+'</div>' +
+          '<div style="font-size:0.66rem;color:#7a9ab8;margin-top:3px;line-height:1.35">'+baseTxt+'</div>' + sleepWeekHtml(S.athleteName) +
         '</div>' +
       '</div>';
     const edit = document.createElement('button');
     edit.style.cssText = 'margin-top:12px;width:100%;padding:9px;border-radius:10px;border:1px solid rgba(100,150,190,0.3);background:rgba(255,255,255,0.5);color:#4a6a8a;font-weight:700;font-size:0.8rem;cursor:pointer';
     edit.textContent = 'Editar check-in';
-    edit.onclick = function(){ S.wellSel = { sleep:w.sleep, soreness:w.soreness, fatigue:w.fatigue, stress:w.stress }; S.wellNote = w.note || ''; S.wellEditing = true; render(); };
+    edit.onclick = function(){ S.wellSel = { sleep:w.sleep, soreness:w.soreness, fatigue:w.fatigue, stress:w.stress }; S.wellSleepBand = (w.sleep_band != null ? w.sleep_band : null); S.wellNote = w.note || ''; S.wellEditing = true; render(); };
     card.appendChild(edit);
     return card;
   }
@@ -8020,6 +8236,7 @@ function buildWellnessCheckin() {
     }
     block.appendChild(scale);
     card.appendChild(block);
+    if (q.key === 'sleep') card.appendChild(buildSleepHoursRow());
   });
 
   // Disponibilidad live
@@ -8043,10 +8260,10 @@ function buildWellnessCheckin() {
   save.onclick = function(){
     if (sum == null) { showToast('Completa los 4', 'error'); return; }
     save.disabled = true; save.textContent = 'Guardando…';
-    dbSaveWellness(todayStr(), S.athleteName, sel.sleep, sel.soreness, sel.fatigue, sel.stress, S.wellNote).then(function(res){
+    dbSaveWellness(todayStr(), S.athleteName, sel.sleep, sel.soreness, sel.fatigue, sel.stress, S.wellNote, S.wellSleepBand).then(function(res){
       if (res) {
         S.wellEditing = false;
-        S.wellSel = { sleep:null, soreness:null, fatigue:null, stress:null }; S.wellNote = '';
+        S.wellSel = { sleep:null, soreness:null, fatigue:null, stress:null }; S.wellSleepBand = null; S.wellNote = '';
         Promise.all([
           dbGetDayWellness(todayStr()).then(function(wm){ DATA.wellness[todayStr()] = wm; }),
           dbGetAthleteWellnessHist(S.athleteName).then(function(h){ DATA.athleteWellHist[S.athleteName] = h; })
@@ -8063,7 +8280,7 @@ function buildWellnessCheckin() {
     const cancel = document.createElement('button');
     cancel.style.cssText = 'width:100%;margin-top:8px;border:none;background:transparent;color:#7a9ab8;font-weight:700;font-size:0.78rem;cursor:pointer;padding:4px';
     cancel.textContent = 'Cancelar';
-    cancel.onclick = function(){ S.wellEditing=false; S.wellSel={sleep:null,soreness:null,fatigue:null,stress:null}; render(); };
+    cancel.onclick = function(){ S.wellEditing=false; S.wellSel={sleep:null,soreness:null,fatigue:null,stress:null}; S.wellSleepBand=null; render(); };
     card.appendChild(cancel);
   }
   return card;
@@ -8695,6 +8912,7 @@ function buildAthleteInicio() {
     d.appendChild(stRPE);
     d.appendChild(buildRPEChart(hist.slice(-14)));
   }
+  const vsT = buildRpeVsTargetA(hist); if (vsT) d.appendChild(vsT);
 
   // ── CALCULADORA DE RITMOS ──
   const stRitmo = document.createElement('div'); stRitmo.className = 'section-title'; stRitmo.style.marginTop='16px'; stRitmo.textContent = 'Calculadora de ritmos';
@@ -8809,6 +9027,9 @@ function buildAthleteRPE() {
     const cs = document.createElement('div'); cs.className = 'confirm-screen';
     cs.innerHTML = '<div class="confirm-emoji"><svg viewBox="0 0 64 64" width="76" height="76" fill="none"><circle cx="32" cy="32" r="30" fill="#0f9d58" opacity=".14"/><circle cx="32" cy="32" r="22" fill="#0f9d58"/><path d="M22.5 32.5l6.5 6.5 12.5-13" stroke="#fff" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="confirm-rpe" style="color:' + rpeColor(slotEntry.rpe) + '">' + slotEntry.rpe + '</div><div class="confirm-label">RPE registrado · <span style="color:' + fat.color + '">' + fat.label + '</span></div><div style="margin-top:20px;font-size:0.8rem;color:var(--text2)">Ya registraste tu RPE' + (double ? ' de este turno' : (rpeDate === today ? ' hoy' : ' de ayer')) + '</div>' + pendingNote;
     d.appendChild(cs);
+    // Tras guardar, loadData ya trae el registro y se llega aquí (no a la pantalla de rpeSubmitted)
+    const afterE = buildRpeAfterA(rpeDate, S.rpeSlot, slotEntry.rpe, S.rpeSubmitted); if (afterE) d.appendChild(afterE);
+    S.rpeSubmitted = false;
     return d;
   }
 
@@ -8817,6 +9038,7 @@ function buildAthleteRPE() {
     const cs = document.createElement('div'); cs.className = 'confirm-screen';
     cs.innerHTML = '<div class="confirm-emoji"><svg viewBox="0 0 64 64" width="76" height="76" fill="none"><circle cx="32" cy="32" r="30" fill="#0f9d58" opacity=".14"/><circle cx="32" cy="32" r="22" fill="#0f9d58"/><path d="M22.5 32.5l6.5 6.5 12.5-13" stroke="#fff" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="confirm-rpe" style="color:' + rpeColor(S.rpeSelected) + '">' + S.rpeSelected + '</div><div class="confirm-label">Registrado · <span style="color:' + fat.color + '">' + fat.label + '</span></div>';
     d.appendChild(cs);
+    const afterS = buildRpeAfterA(rpeDate, S.rpeSlot, S.rpeSelected, true); if (afterS) d.appendChild(afterS);
     S.rpeSubmitted = false;
     return d;
   }
@@ -8832,6 +9054,7 @@ function buildAthleteRPE() {
     rpeGrid.appendChild(btn);
   }
   d.appendChild(rpeGrid);
+  d.appendChild(buildRpeHelpA());
 
   // Fatigue
   const st2 = document.createElement('div'); st2.className = 'section-title'; st2.style.marginTop='20px'; st2.textContent = '¿Cómo estás?';
@@ -9221,7 +9444,7 @@ function buildLactateChart(steps, threshold, aerobic) {
       '<rect x="'+(PAD.left+iW-lw)+'" y="'+(ly-12)+'" width="'+lw+'" height="12" fill="rgba(255,255,255,0.85)"/>' +
       '<text x="'+(PAD.left+iW-4)+'" y="'+(ly-3)+'" font-size="9" fill="'+color+'" font-weight="700" text-anchor="end">'+label+'</text>';
   };
-  const refLines = refLine(4.0, '#c0392b', '4.0 · OBLA') + refLine(2.0, '#2980b9', '2.0 · LT1');
+  const refLines = refLine(4.0, '#c0392b', '4.0 · OBLA') + refLine(2.0, '#b45309', '2.0 · LT1');
 
   // Banda sombreada: el umbral real de cada nadador está "por esta zona", no en una
   // línea exacta. Umbral: entre 3 y 5 mmol/L; LT1: entre 1,5 y 2,5 mmol/L.
@@ -9233,9 +9456,9 @@ function buildLactateChart(steps, threshold, aerobic) {
     const txt = (a ? a.pace100.replace(/\.\d+$/, '') : '…') + '–' + (b ? b.pace100.replace(/\.\d+$/, '') : '…');
     const full = label + ' ' + txt, lw = full.length * 5.0 + 14;
     const cx = Math.min(PAD.left + iW - lw / 2, Math.max(PAD.left + lw / 2, (x1 + x2) / 2));
-    return '<rect x="'+x1+'" y="'+PAD.top+'" width="'+(x2-x1)+'" height="'+iH+'" fill="'+color+'" opacity="0.14"/>' +
-      '<line x1="'+x1+'" y1="'+PAD.top+'" x2="'+x1+'" y2="'+(PAD.top+iH)+'" stroke="'+color+'" stroke-width="1" opacity="0.35"/>' +
-      '<line x1="'+x2+'" y1="'+PAD.top+'" x2="'+x2+'" y2="'+(PAD.top+iH)+'" stroke="'+color+'" stroke-width="1" opacity="0.35"/>' +
+    return '<rect x="'+x1+'" y="'+PAD.top+'" width="'+(x2-x1)+'" height="'+iH+'" fill="'+color+'" opacity="0.24"/>' +
+      '<line x1="'+x1+'" y1="'+PAD.top+'" x2="'+x1+'" y2="'+(PAD.top+iH)+'" stroke="'+color+'" stroke-width="1" opacity="0.55"/>' +
+      '<line x1="'+x2+'" y1="'+PAD.top+'" x2="'+x2+'" y2="'+(PAD.top+iH)+'" stroke="'+color+'" stroke-width="1" opacity="0.55"/>' +
       '<rect x="'+(cx-lw/2)+'" y="'+labelY+'" width="'+lw+'" height="15" rx="7" fill="'+color+'"/>' +
       '<text x="'+cx+'" y="'+(labelY+11)+'" font-size="8.5" font-weight="700" fill="white" text-anchor="middle">'+full+'</text>';
   }
@@ -9247,11 +9470,11 @@ function buildLactateChart(steps, threshold, aerobic) {
       '<rect x="'+(tx-24)+'" y="'+labelY+'" width="48" height="15" rx="7" fill="'+color+'"/>' +
       '<text x="'+tx+'" y="'+(labelY+11)+'" font-size="8.5" font-weight="700" fill="white" text-anchor="middle">'+th.pace100+'</text>';
   }
-  const markers = band(3.0, 5.0, '#1e8449', 'Umbral', PAD.top - 22) + band(1.5, 2.5, '#2980b9', 'LT1', PAD.top - 4);
+  const markers = band(3.0, 5.0, '#1e8449', 'Umbral', PAD.top - 22) + band(1.5, 2.5, '#b45309', 'LT1', PAD.top - 4);
 
-  const xLabels = pts0.map(function(p){ return '<text x="'+xPos(p.v)+'" y="'+(H-6)+'" font-size="8.5" fill="#4a6a8a" text-anchor="middle">'+p.v.toFixed(2)+'</text>'; }).join('');
-  const axisTitle = '<text x="'+(PAD.left+iW/2)+'" y="'+(H+2)+'" font-size="8" fill="#7a9ab8" text-anchor="middle"></text>' +
-    '<text x="4" y="'+(PAD.top+iH/2)+'" font-size="8" fill="#7a9ab8" text-anchor="middle" transform="rotate(-90 4 '+(PAD.top+iH/2)+')">mmol/L</text>';
+  const xLabels = pts0.map(function(p){ return '<text x="'+xPos(p.v)+'" y="'+(H-6)+'" font-size="8.5" fill="#3a556e" text-anchor="middle">'+p.v.toFixed(2)+'</text>'; }).join('');
+  const axisTitle = '<text x="'+(PAD.left+iW/2)+'" y="'+(H+2)+'" font-size="8" fill="#4a6a8a" text-anchor="middle"></text>' +
+    '<text x="4" y="'+(PAD.top+iH/2)+'" font-size="8" fill="#4a6a8a" text-anchor="middle" transform="rotate(-90 4 '+(PAD.top+iH/2)+')">mmol/L</text>';
 
   const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.setAttribute('viewBox','0 0 '+W+' '+H); svg.setAttribute('width','100%'); svg.setAttribute('height',H);
