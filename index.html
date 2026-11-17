@@ -9804,7 +9804,19 @@ async function loadRosterForLogin() {
 showLoading();
 restoreAthleteSession().catch(function () {})
   .then(function () { return loadRosterForLogin(); }).catch(function () {})
-  .then(function () { renderAsync(); });
+  .then(function () {
+    // Enlace desde la landing ("Empezar prueba"): /app/?registro abre directamente
+    // "Crear cuenta de entrenador". Solo si no hay sesión; la cuenta sigue quedando
+    // pendiente hasta que el admin la apruebe.
+    if (!S.role && /[?&]registro(=|&|$)/.test(window.location.search)) {
+      S.role = 'pin'; S.pinMode = 'signup'; S.pinBuffer = ''; S.pinError = false; S.signupError = null;
+      track('signup_from_landing', {});
+    }
+    if (/[?&]registro(=|&|$)/.test(window.location.search)) {
+      history.replaceState(null, '', window.location.pathname + window.location.hash);
+    }
+    renderAsync();
+  });
 </script>
 </body>
 </html>
