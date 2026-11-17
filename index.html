@@ -2915,7 +2915,7 @@ function resetSession() {
   // dispositivo del nadador, con su propia opción "Cambiar de equipo".
   S.role = null; S.athleteName = null; S.isAdmin = false;
   S.showCoachAdmin = false; S.coachList = null; S.myTeamCode = null;
-  S.coachStatus = null; S.coachEmail = null; S.coachProfile = undefined; S.planStatus = null; S.showProfile = false;
+  S.coachStatus = null; S.coachEmail = null; S.coachProfile = undefined; S.planStatus = null; S.showProfile = false; S.showPlans = false;
   S.tab = 0; S.ath_tab = 0;
   S._cstrLoading = false; S._strLoading = false;
 }
@@ -3993,6 +3993,7 @@ function render() {
   if (nvBanner) app.appendChild(nvBanner);
   if (S.showChangelog) app.appendChild(buildChangelogPanel());
   if (S.role === 'coach' && (S.showProfile || (S.coachProfile && !S.coachProfile.adult_confirmed_at && !S.profileSkipped))) app.appendChild(buildProfileSheet());
+  if (S.role === 'coach' && S.showPlans) app.appendChild(buildPlansSheet());
   const content = document.createElement('div');
   content.className = 'content';
 
@@ -5080,7 +5081,13 @@ const PLAN_URL = 'https://ondrift.app/?landing#precio';
 const LEGAL_TERMS_URL = 'https://ondrift.app/terminos';
 const LEGAL_PRIVACY_URL = 'https://ondrift.app/privacidad';
 const TRIAL_DAYS = 15;
-const PLAN_LABELS = { individual: 'Individual', duo: 'Dúo', grupo4: 'Grupo de 4', club: 'Club', inactive: 'Sin plan activo' };
+const PLAN_LABELS = { individual: 'Individual', duo: 'Dúo', grupo4: 'Grupo de 4', club: 'Club', inactive: 'Sin plan activo', expired: 'Sin plan activo' };
+// Planes de pago con Stripe. Precios finales con IVA incluido (mismos que la landing).
+const PAY_PLANS = [
+  { id: 'individual', name: 'Individual', who: '1 entrenador · hasta 25 nadadores', month: 25, year: 250 },
+  { id: 'duo', name: 'Dúo', who: '2 entrenadores · 25 nadadores cada uno', month: 40, year: 400 },
+  { id: 'grupo4', name: 'Grupo de 4', who: '4 entrenadores · 25 nadadores cada uno', month: 70, year: 700 }
+];
 
 async function coachRpc(name, body, _retry) {
   try {
@@ -5143,12 +5150,120 @@ function buildPlanBanner() {
   b.style.cssText = 'margin:12px 16px 0;padding:12px 14px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px solid ' + (ps.can_write === false ? 'rgba(200,146,10,0.55)' : 'rgba(52,152,219,0.45)');
   const t = document.createElement('div'); t.style.cssText = 'font-size:0.85rem;line-height:1.4;flex:1 1 220px;font-weight:600';
   t.textContent = msg;
-  const a = document.createElement('a'); a.className = 'btn btn-primary btn-sm';
-  a.href = PLAN_URL; a.target = '_blank'; a.rel = 'noopener';
-  a.style.cssText = 'text-decoration:none;white-space:nowrap';
-  a.textContent = 'Ver planes';
+  const a = document.createElement('button'); a.className = 'btn btn-primary btn-sm';
+  a.style.cssText = 'white-space:nowrap;width:auto';
+  a.textContent = ps.can_write === false ? 'Suscribirme' : 'Ver planes';
+  a.onclick = function() { S.showPlans = true; render(); };
   b.append(t, a);
   return b;
+}
+
+// ── Pago con Stripe ─────────────────────────────────────────
+// La app solo abre la página de pago de Stripe; el plan lo activa el webhook
+// del servidor cuando Stripe confirma el cobro (nunca el navegador).
+function appReturnUrl() { return window.location.origin + window.location.pathname; }
+
+async function startCheckout(plan, interval, btn, errEl) {
+  btn.disabled = true; const label = btn.textContent; btn.textContent = 'Abriendo el pago…'; errEl.textContent = '';
+  track('checkout_start', { plan: plan, interval: interval });
+  try {
+    const r = await sbFunctionCall('create-checkout', { plan: plan, interval: interval, return_url: appReturnUrl() }, true);
+    if (r.ok && r.data && r.data.url) { window.location.href = r.data.url; return; }
+    errEl.textContent = (r.data && r.data.error) || 'No se pudo abrir el pago. Inténtalo de nuevo.';
+  } catch (e) {
+    errEl.textContent = 'Sin conexión. Inténtalo de nuevo.';
+  }
+  btn.disabled = false; btn.textContent = label;
+}
+
+async function openBillingPortal(btn, errEl) {
+  btn.disabled = true; const label = btn.textContent; btn.textContent = 'Abriendo…'; if (errEl) errEl.textContent = '';
+  try {
+    const r = await sbFunctionCall('create-portal', { return_url: appReturnUrl() }, true);
+    if (r.ok && r.data && r.data.url) { window.location.href = r.data.url; return; }
+    if (errEl) errEl.textContent = (r.data && r.data.error) || 'No se pudo abrir la gestión de la suscripción.';
+  } catch (e) {
+    if (errEl) errEl.textContent = 'Sin conexión. Inténtalo de nuevo.';
+  }
+  btn.disabled = false; btn.textContent = label;
+}
+
+function buildPlansSheet() {
+  const close = function() { S.showPlans = false; render(); };
+  const overlay = document.createElement('div'); overlay.className = 'overlay open';
+  overlay.onclick = function(e) { if (e.target === overlay) close(); };
+  const sheet = document.createElement('div'); sheet.className = 'bottom-sheet';
+  sheet.setAttribute('role', 'dialog'); sheet.setAttribute('aria-label', 'Elige tu plan');
+
+  const title = document.createElement('div'); title.className = 'sheet-title'; title.textContent = 'Elige tu plan';
+  const x = document.createElement('button'); x.className = 'sheet-close'; x.textContent = '✕'; x.onclick = close;
+  title.appendChild(x); sheet.appendChild(title);
+
+  if (!S.planInterval) S.planInterval = 'month';
+  const seg = document.createElement('div');
+  seg.style.cssText = 'display:flex;gap:6px;margin:4px 0 12px';
+  [['month', 'Mensual'], ['year', 'Anual · 2 meses gratis']].forEach(function(o) {
+    const b = document.createElement('button');
+    b.className = 'btn ' + (S.planInterval === o[0] ? 'btn-primary' : 'btn-secondary') + ' btn-sm';
+    b.style.cssText = 'flex:1;width:auto';
+    b.textContent = o[1];
+    b.onclick = function() { S.planInterval = o[0]; render(); };
+    seg.appendChild(b);
+  });
+  sheet.appendChild(seg);
+
+  const err = document.createElement('div');
+  err.style.cssText = 'color:var(--red);font-size:0.8rem;min-height:1em;margin-bottom:6px';
+
+  PAY_PLANS.forEach(function(p) {
+    const yearly = S.planInterval === 'year';
+    const card = document.createElement('div'); card.className = 'card';
+    card.style.cssText = 'padding:12px 14px;margin:0 0 10px;display:flex;gap:12px;align-items:center;justify-content:space-between';
+    const info = document.createElement('div'); info.style.cssText = 'flex:1;min-width:0';
+    const n = document.createElement('div'); n.style.cssText = 'font-weight:700'; n.textContent = p.name;
+    const w = document.createElement('div'); w.style.cssText = 'font-size:0.78rem;color:var(--text2);margin-top:2px'; w.textContent = p.who;
+    const pr = document.createElement('div'); pr.style.cssText = 'font-size:0.95rem;font-weight:700;margin-top:6px';
+    pr.textContent = (yearly ? p.year : p.month) + ' €' + (yearly ? '/año' : '/mes');
+    info.append(n, w, pr);
+    const btn = document.createElement('button'); btn.className = 'btn btn-primary btn-sm';
+    btn.style.cssText = 'width:auto;white-space:nowrap';
+    btn.textContent = 'Elegir';
+    btn.onclick = function() { startCheckout(p.id, S.planInterval, btn, err); };
+    card.append(info, btn);
+    sheet.appendChild(card);
+  });
+
+  const note = document.createElement('div');
+  note.style.cssText = 'font-size:0.75rem;color:var(--text2);line-height:1.45;margin-top:2px';
+  note.textContent = 'Precio final con IVA incluido. Sin permanencia: cancelas cuando quieras desde "Gestionar suscripción". El pago lo procesa Stripe; Ondrift no ve ni guarda tu tarjeta.';
+  sheet.append(err, note);
+  overlay.appendChild(sheet);
+  return overlay;
+}
+
+// Vuelta desde Stripe: ?pago=ok | ?pago=cancelado. El webhook puede tardar unos
+// segundos en activar el plan, así que se reconsulta el estado varias veces.
+function handlePaymentReturn() {
+  const m = /[?&]pago=(ok|cancelado)/.exec(window.location.search);
+  if (!m) return;
+  history.replaceState(null, '', window.location.pathname + window.location.hash);
+  if (m[1] === 'cancelado') { showToast('Pago cancelado. No se ha cobrado nada.'); return; }
+  track('checkout_return_ok', {});
+  showToast('Pago recibido. Activando tu plan…', 'success');
+  let tries = 0;
+  const tick = async function() {
+    tries++;
+    if (S.role !== 'coach') { if (tries < 10) setTimeout(tick, 3000); return; }
+    await loadPlanStatus();
+    const ps = S.planStatus;
+    if (ps && ps.can_write && ['individual', 'duo', 'grupo4', 'club'].indexOf(ps.plan) !== -1) {
+      showToast('Plan ' + (PLAN_LABELS[ps.plan] || ps.plan) + ' activo. ¡Gracias!', 'success');
+      return;
+    }
+    if (tries < 10) setTimeout(tick, 3000);
+    else showToast('El pago está hecho, pero el plan tarda en activarse. Recarga en un minuto.');
+  };
+  setTimeout(tick, 1500);
 }
 
 function buildProfileSheet() {
@@ -5203,21 +5318,29 @@ function buildProfileSheet() {
   const ps = S.planStatus;
   if (p.is_admin) {
     planTxt.textContent = 'Administrador';
-  } else if (plan === 'trial' || plan === 'inactive') {
+  } else if (plan === 'trial' || plan === 'inactive' || plan === 'expired') {
     let d = ps ? ps.days_left : null;
     if (d === null && plan === 'trial' && p.trial_start) d = TRIAL_DAYS - Math.floor((Date.now() - new Date(p.trial_start).getTime()) / 86400000);
-    if (plan === 'inactive') planTxt.textContent = 'Sin plan activo · solo lectura';
+    if (plan === 'inactive' || plan === 'expired') planTxt.textContent = 'Sin plan activo · solo lectura';
     else if (ps && ps.can_write === false) planTxt.textContent = 'Prueba gratuita terminada · solo lectura';
     else planTxt.textContent = (d !== null && d > 0) ? 'Prueba gratuita · te quedan ' + d + (d === 1 ? ' día' : ' días') : 'Prueba gratuita';
-    const cta = document.createElement('a'); cta.className = 'btn btn-primary';
-    cta.href = PLAN_URL; cta.target = '_blank'; cta.rel = 'noopener';
-    cta.style.cssText = 'display:block;text-align:center;text-decoration:none;margin-top:10px';
+    const cta = document.createElement('button'); cta.className = 'btn btn-primary';
+    cta.style.cssText = 'display:block;width:100%;margin-top:10px';
     cta.textContent = 'Ver planes y suscribirme';
+    cta.onclick = function() { S.showProfile = false; S.showPlans = true; render(); };
     planBox.appendChild(cta);
   } else if (plan === 'free') {
     planTxt.textContent = 'Gratis de por vida';
   } else {
     planTxt.textContent = 'Plan ' + (PLAN_LABELS[plan] || plan);
+    if (plan !== 'club') {
+      const perr = document.createElement('div'); perr.style.cssText = 'color:var(--red);font-size:0.78rem;margin-top:6px;min-height:0';
+      const mg = document.createElement('button'); mg.className = 'btn btn-secondary';
+      mg.style.cssText = 'display:block;width:100%;margin-top:10px';
+      mg.textContent = 'Gestionar suscripción';
+      mg.onclick = function() { openBillingPortal(mg, perr); };
+      planBox.append(mg, perr);
+    }
   }
   if (ps && ps.athlete_limit) {
     const used = document.createElement('div'); used.style.cssText = 'font-size:0.82rem;color:var(--text2);margin-top:6px';
@@ -9815,6 +9938,7 @@ restoreAthleteSession().catch(function () {})
     if (/[?&]registro(=|&|$)/.test(window.location.search)) {
       history.replaceState(null, '', window.location.pathname + window.location.hash);
     }
+    handlePaymentReturn();
     renderAsync();
   });
 </script>
