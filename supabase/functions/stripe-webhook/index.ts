@@ -80,6 +80,11 @@ async function applySubscription(admin: any, sub: any, coachIdHint?: string | nu
     subscription_status: status,
     billing_interval: sub?.items?.data?.[0]?.price?.recurring?.interval || null,
     current_period_end: periodEnd(sub),
+    // Cancelada pero pagada hasta final de periodo: la app avisa de la fecha de fin.
+    // Según cómo se cancele, Stripe usa cancel_at o cancel_at_period_end.
+    cancel_at: sub.cancel_at
+      ? new Date(sub.cancel_at * 1000).toISOString()
+      : (sub.cancel_at_period_end ? periodEnd(sub) : null),
   };
   if (KEEP_ACCESS.includes(status)) {
     const plan = planOf(sub);
