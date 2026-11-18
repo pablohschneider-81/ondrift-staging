@@ -55,10 +55,12 @@ begin
       update public.coaches set invite_token = replace(gen_random_uuid()::text, '-', '')
        where id = me.id returning * into me;
     end if;
-    select coalesce(json_agg(json_build_object('id', m.id, 'name', coalesce(m.display_name, 'Entrenador sin nombre')) order by m.created_at), '[]'::json),
+    -- Sin nombre, se muestra el email: solo lo ve quien paga, y es alguien a quien invitó.
+    select coalesce(json_agg(json_build_object('id', m.id, 'name', coalesce(m.display_name, u.email, 'Entrenador sin nombre')) order by m.created_at), '[]'::json),
            count(*)::int
       into members, used
-      from public.coaches m where m.billing_owner_id = me.id;
+      from public.coaches m left join auth.users u on u.id = m.id
+     where m.billing_owner_id = me.id;
     return json_build_object(
       'role', 'owner', 'plan', me.plan, 'subscription_status', me.subscription_status,
       'cancel_at', me.cancel_at, 'current_period_end', me.current_period_end,
