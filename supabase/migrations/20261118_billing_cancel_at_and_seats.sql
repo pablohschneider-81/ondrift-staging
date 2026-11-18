@@ -15,13 +15,13 @@ returns int language sql immutable as $$
 $$;
 
 -- 2) Cuando cambia el plan de quien paga, sus invitados le siguen:
---    mismo plan si sigue en Dúo / Grupo; si no, solo lectura ('expired').
+--    mismo plan si sigue en Dúo / Grupo; si no, solo lectura ('inactive').
 create or replace function public.propagate_owner_plan()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if new.billing_owner_id is null and new.plan is distinct from old.plan then
     update public.coaches m
-       set plan = case when new.plan in ('duo','grupo4') then new.plan else 'expired' end
+       set plan = case when new.plan in ('duo','grupo4') then new.plan else 'inactive' end
      where m.billing_owner_id = new.id;
   end if;
   return new;
@@ -111,7 +111,7 @@ end $$;
 create or replace function public.remove_billing_member(p_member uuid)
 returns json language plpgsql volatile security definer set search_path = public as $$
 begin
-  update public.coaches set billing_owner_id = null, plan = 'expired'
+  update public.coaches set billing_owner_id = null, plan = 'inactive'
    where id = p_member and billing_owner_id = auth.uid();
   if not found then return json_build_object('ok', false, 'error', 'Ese entrenador no está en tu plan.'); end if;
   return json_build_object('ok', true);

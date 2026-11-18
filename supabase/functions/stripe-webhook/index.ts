@@ -12,7 +12,7 @@
 //
 // Estados: active / trialing / past_due mantienen el plan (en past_due Stripe
 // reintenta el cobro y se avisa antes de cortar). canceled / unpaid /
-// incomplete_expired pasan el plan a 'expired' = solo lectura.
+// incomplete_expired pasan el plan a 'inactive' = solo lectura.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -92,7 +92,7 @@ async function applySubscription(admin: any, sub: any, coachIdHint?: string | nu
     // Quien paga no espera a la aprobación manual: pagar ya demuestra que no es un bot.
     patch.status = "approved";
   } else if (["canceled", "unpaid", "incomplete_expired"].includes(status)) {
-    patch.plan = "expired";
+    patch.plan = "inactive"; // solo lectura (valor que admite chk_coaches_plan)
   }
   const { error } = await admin.from("coaches").update(patch).eq("id", coachId);
   if (error) throw new Error("No se pudo actualizar el entrenador: " + error.message);
