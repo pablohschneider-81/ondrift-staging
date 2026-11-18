@@ -4323,11 +4323,16 @@ function buildCoachPending() {
 
 function buildConfirmEmailModal() {
   const ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(26,42,58,0.45); backdrop-filter:blur(4px);';
+  // Fondo casi opaco y texto oscuro: la tarjeta de cristal del login, encima del velo,
+  // dejaba el texto gris sobre gris y no se leía.
+  ov.style.cssText = 'position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(26,42,58,0.28); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);';
 
   const card = document.createElement('div');
   card.className = 'login-card';
-  card.style.cssText += 'max-width:320px; text-align:center;';
+  card.style.cssText += 'max-width:320px; text-align:center; color:#0b2236;';
+  // El vidrio global usa !important; solo un !important en línea gana en este aviso.
+  card.style.setProperty('background', 'rgba(255,255,255,0.96)', 'important');
+  card.style.setProperty('box-shadow', '0 12px 40px rgba(11,34,54,0.25)', 'important');
 
   const icon = document.createElement('div');
   icon.style.cssText = 'font-size:40px; margin-bottom:10px;';
@@ -4335,11 +4340,12 @@ function buildConfirmEmailModal() {
   card.appendChild(icon);
 
   const h3 = document.createElement('h2');
+  h3.style.cssText = 'color:#0b2236; margin:0 0 10px;';
   h3.textContent = 'Revisa tu correo';
   card.appendChild(h3);
 
   const p = document.createElement('p');
-  p.style.cssText = 'color:var(--text2); font-size:0.9rem; line-height:1.5; margin-top:-8px; margin-bottom:16px;';
+  p.style.cssText = 'color:#2c4a66; font-size:0.92rem; line-height:1.55; margin:0 0 18px;';
   p.textContent = 'Te enviamos un email de confirmaci\u00f3n. Toca el enlace para activar tu cuenta y luego entra con tu contrase\u00f1a (revisa tambi\u00e9n la carpeta de spam).';
   card.appendChild(p);
 
