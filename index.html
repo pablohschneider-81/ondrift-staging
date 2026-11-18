@@ -5292,13 +5292,28 @@ async function loadBilling() {
 }
 function inviteUrl(token) { return appReturnUrl() + '?invitacion=' + token; }
 function fmtDay(iso) {
-  try { return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' }); } catch (e) { return ''; }
+  // Con año solo si no es el año en curso: "18 de diciembre" / "18 de noviembre de 2027".
+  try {
+    const d = new Date(iso);
+    const opts = { day: 'numeric', month: 'long' };
+    if (d.getFullYear() !== new Date().getFullYear()) opts.year = 'numeric';
+    return d.toLocaleDateString('es-ES', opts);
+  } catch (e) { return ''; }
 }
 
 // Sección del perfil: estado de la suscripción y, si pagas un Dúo / Grupo, tus plazas.
 function buildBillingSection(container) {
   const b = S.billing;
   if (!b) return;
+  // Periodicidad y próxima renovación (si no está cancelada; si lo está, se avisa abajo).
+  if (b.billing_interval === 'month' || b.billing_interval === 'year') {
+    const iv = document.createElement('div');
+    iv.style.cssText = 'font-size:0.82rem;color:var(--text2);margin-top:6px;line-height:1.45';
+    let t = b.billing_interval === 'year' ? 'Pago anual' : 'Pago mensual';
+    if (!b.cancel_at && b.current_period_end) t += ' · se renueva el ' + fmtDay(b.current_period_end);
+    iv.textContent = t;
+    container.appendChild(iv);
+  }
   if (b.cancel_at) {
     const c = document.createElement('div');
     c.style.cssText = 'font-size:0.82rem;color:var(--text2);margin-top:6px;line-height:1.45';
