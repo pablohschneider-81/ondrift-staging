@@ -7407,8 +7407,8 @@ function buildCalendar() {
         return;
       }
       // Límite de pruebas por nadador según ámbito (ajustable luego por competición)
-      const maxByType = { 'Regional': 3, 'Autonómico': 6, 'Nacional': 8, 'Internacional': 8, 'Otros': 6 };
-      const maxEv = maxByType[type] || 6;
+      const maxByType = { 'Regional': 4, 'Autonómico': 8, 'Nacional': 8, 'Internacional': 8, 'Otros': 4 };
+      const maxEv = maxByType[type] || 4;
       const btn2 = this; btn2.disabled = true; btn2.textContent = 'Guardando…';
       dbAddCompetition({ name: name.trim(), start: start, end: end || start, location: loc.trim(), type: type, maxEvents: maxEv }).then(function() {
         // limpiar campos sin rerender completo
