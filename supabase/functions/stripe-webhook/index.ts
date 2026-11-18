@@ -12,7 +12,7 @@
 //
 // Estados: active / trialing / past_due mantienen el plan (en past_due Stripe
 // reintenta el cobro y se avisa antes de cortar). canceled / unpaid /
-// incomplete_expired pasan el plan a 'expired' = solo lectura.
+// incomplete_expired pasan el plan a 'inactive' = solo lectura.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -80,6 +80,11 @@ async function applySubscription(admin: any, sub: any, coachIdHint?: string | nu
     subscription_status: status,
     billing_interval: sub?.items?.data?.[0]?.price?.recurring?.interval || null,
     current_period_end: periodEnd(sub),
+    // Cancelada pero pagada hasta final de periodo: la app avisa de la fecha de fin.
+    // Según cómo se cancele, Stripe usa cancel_at o cancel_at_period_end.
+    cancel_at: sub.cancel_at
+      ? new Date(sub.cancel_at * 1000).toISOString()
+      : (sub.cancel_at_period_end ? periodEnd(sub) : null),
   };
   if (KEEP_ACCESS.includes(status)) {
     const plan = planOf(sub);
@@ -87,7 +92,7 @@ async function applySubscription(admin: any, sub: any, coachIdHint?: string | nu
     // Quien paga no espera a la aprobación manual: pagar ya demuestra que no es un bot.
     patch.status = "approved";
   } else if (["canceled", "unpaid", "incomplete_expired"].includes(status)) {
-    patch.plan = "expired";
+    patch.plan = "inactive"; // solo lectura (valor que admite chk_coaches_plan)
   }
   const { error } = await admin.from("coaches").update(patch).eq("id", coachId);
   if (error) throw new Error("No se pudo actualizar el entrenador: " + error.message);
@@ -125,9 +130,14 @@ Deno.serve(async (req: Request) => {
       }
       case "customer.subscription.created":
       case "customer.subscription.updated":
-      case "customer.subscription.deleted":
-        await applySubscription(admin, obj);
+      case "customer.subscription.deleted": {
+        // Stripe no garantiza el orden de los avisos: un 'updated' antiguo podría
+        // llegar después de un 'deleted' y reactivar el plan. Por eso se pide a
+        // Stripe el estado ACTUAL de la suscripción y se aplica ese.
+        const fresh = await stripe("GET", `/subscriptions/${obj.id}`);
+        await applySubscription(admin, fresh);
         break;
+      }
       default:
         break; // El resto de avisos no cambian nada en Ondrift.
     }

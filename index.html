@@ -2938,7 +2938,7 @@ function resetSession() {
   // dispositivo del nadador, con su propia opción "Cambiar de equipo".
   S.role = null; S.athleteName = null; S.isAdmin = false;
   S.showCoachAdmin = false; S.coachList = null; S.myTeamCode = null;
-  S.coachStatus = null; S.coachEmail = null; S.coachProfile = undefined; S.planStatus = null; S.showProfile = false; S.showPlans = false;
+  S.coachStatus = null; S.coachEmail = null; S.coachProfile = undefined; S.planStatus = null; S.showProfile = false; S.showPlans = false; S.billing = null;
   S.tab = 0; S.ath_tab = 0;
   S._cstrLoading = false; S._strLoading = false;
 }
@@ -4466,8 +4466,17 @@ function buildPin() {
     err.style.marginTop = '12px';
     card.appendChild(err);
   }
+  if (getPendingInvite()) {
+    const inv = document.createElement('div');
+    inv.style.cssText = 'margin-top:12px;font-size:0.82rem;line-height:1.45;color:var(--text2);text-align:center';
+    inv.textContent = 'Te han invitado al plan de otro entrenador. ' + (isSignup ? 'Crea tu cuenta' : 'Entra con tu cuenta') + ' y te unirás automáticamente.';
+    card.appendChild(inv);
+  }
   // Tras login/registro OK: mira tu estado real y decide a donde vas
   const routeAfterAuth = async () => {
+    // Invitado a un Dúo / Grupo: se une antes de mirar el estado, porque unirse
+    // aprueba la cuenta y así no se queda esperando la aprobación manual.
+    await tryJoinInvite();
     const status = await fetchCoachStatus();
     S.coachEmail = null;
     if (status === 'approved') { S.role = 'coach'; S.tab = 0; fetchPendingCoachCount(); renderAsync(); maybeShowCoachSurvey(); }
@@ -5202,6 +5211,7 @@ async function loadCoachProfile() {
   if (S.role !== 'coach') return;
   if (r.ok && r.data && r.data[0]) { S.coachProfile = r.data[0]; render(); }
   loadPlanStatus();
+  loadBilling();
 }
 
 // Prueba, límite de nadadores y modo solo lectura. Las reglas viven en la base de datos
@@ -5244,6 +5254,129 @@ function buildPlanBanner() {
   a.onclick = function() { S.showPlans = true; render(); };
   b.append(t, a);
   return b;
+}
+
+// ── Plazas de Dúo / Grupo de 4 ──────────────────────────────
+// Quien paga un Dúo o un Grupo invita a sus compañeros con un enlace. Las reglas
+// (plazas, quién puede unirse, propagación al cancelar) viven en la base de datos:
+// my_billing, join_billing_group, remove_billing_member, regenerate_invite.
+const INVITE_KEY = 'ondrift_invite';
+function getPendingInvite() {
+  let t = S.pendingInviteMem || null;
+  try { t = localStorage.getItem(INVITE_KEY) || t; } catch (e) {}
+  return t;
+}
+function clearPendingInvite() {
+  S.pendingInviteMem = null;
+  try { localStorage.removeItem(INVITE_KEY); } catch (e) {}
+}
+async function tryJoinInvite() {
+  const token = getPendingInvite();
+  if (!token) return;
+  const r = await coachRpc('join_billing_group', { p_token: token });
+  const d = r && r.data;
+  if (!r.ok || !d) return; // error de red: se reintenta en el próximo inicio de sesión
+  clearPendingInvite();
+  if (d.ok) {
+    track('invite_joined', { plan: d.plan });
+    showToast(d.already ? 'Ya estás en este plan.' : 'Te has unido al plan ' + (PLAN_LABELS[d.plan] || d.plan) + (d.owner_name ? ' de ' + d.owner_name : '') + '.', 'success');
+  } else {
+    showToast(d.error || 'No se pudo usar la invitación.', 'error');
+  }
+}
+async function loadBilling() {
+  const r = await coachRpc('my_billing');
+  if (S.role !== 'coach') return;
+  S.billing = (r.ok && r.data) ? r.data : null;
+  render();
+}
+function inviteUrl(token) { return appReturnUrl() + '?invitacion=' + token; }
+function fmtDay(iso) {
+  try { return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' }); } catch (e) { return ''; }
+}
+
+// Sección del perfil: estado de la suscripción y, si pagas un Dúo / Grupo, tus plazas.
+function buildBillingSection(container) {
+  const b = S.billing;
+  if (!b) return;
+  if (b.cancel_at) {
+    const c = document.createElement('div');
+    c.style.cssText = 'font-size:0.82rem;color:var(--text2);margin-top:6px;line-height:1.45';
+    c.textContent = b.role === 'member'
+      ? 'El plan termina el ' + fmtDay(b.cancel_at) + ': quien lo paga lo ha cancelado.'
+      : 'Termina el ' + fmtDay(b.cancel_at) + ' y no se renovará. Puedes reactivarlo en "Gestionar suscripción".';
+    container.appendChild(c);
+  }
+  if (b.role === 'member') {
+    const m = document.createElement('div');
+    m.style.cssText = 'font-size:0.82rem;color:var(--text2);margin-top:6px';
+    m.textContent = 'Lo paga ' + b.owner_name + '.';
+    container.appendChild(m);
+    return;
+  }
+  if (b.role !== 'owner') return;
+
+  const box = document.createElement('div');
+  box.style.cssText = 'margin-top:14px;padding-top:12px;border-top:1px solid rgba(74,106,138,0.18)';
+  const h = document.createElement('div'); h.style.cssText = 'font-weight:700;font-size:0.9rem';
+  h.textContent = 'Tu equipo de entrenadores · ' + b.seats_used + ' de ' + b.seats_total + ' plazas';
+  box.appendChild(h);
+
+  const err = document.createElement('div'); err.style.cssText = 'color:var(--red);font-size:0.78rem;margin-top:6px';
+  const you = document.createElement('div'); you.style.cssText = 'font-size:0.85rem;margin-top:8px';
+  you.textContent = 'Tú (pagas el plan)';
+  box.appendChild(you);
+  (b.members || []).forEach(function(mem) {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;font-size:0.85rem';
+    const n = document.createElement('span'); n.textContent = mem.name;
+    const rm = document.createElement('button'); rm.className = 'btn btn-secondary btn-sm'; rm.style.cssText = 'width:auto';
+    rm.textContent = 'Quitar';
+    rm.onclick = async function() {
+      if (!confirm('¿Quitar a ' + mem.name + ' de tu plan? Su cuenta pasará a solo lectura; no pierde sus datos y puede suscribirse por su cuenta.')) return;
+      rm.disabled = true;
+      const r = await coachRpc('remove_billing_member', { p_member: mem.id });
+      if (r.ok && r.data && r.data.ok) { showToast(mem.name + ' ya no está en tu plan.', 'success'); loadBilling(); }
+      else { err.textContent = (r.data && r.data.error) || 'No se pudo quitar.'; rm.disabled = false; }
+    };
+    row.append(n, rm);
+    box.appendChild(row);
+  });
+
+  const free = b.seats_total - b.seats_used;
+  const p = document.createElement('div');
+  p.style.cssText = 'font-size:0.8rem;color:var(--text2);margin-top:10px;line-height:1.45';
+  p.textContent = free > 0
+    ? 'Te quedan ' + free + (free === 1 ? ' plaza libre' : ' plazas libres') + '. Manda este enlace a tus compañeros: cada uno tendrá su propia cuenta y sus 25 nadadores.'
+    : 'Todas las plazas están ocupadas. Si quitas a alguien, su plaza queda libre.';
+  box.appendChild(p);
+
+  if (free > 0 && b.invite_token) {
+    const url = inviteUrl(b.invite_token);
+    const share = document.createElement('button'); share.className = 'btn btn-primary';
+    share.style.cssText = 'display:block;width:100%;margin-top:8px';
+    share.textContent = 'Compartir enlace de invitación';
+    share.onclick = async function() {
+      const text = 'Te invito a mi plan de Ondrift. Crea tu cuenta de entrenador con este enlace:';
+      try {
+        if (navigator.share) { await navigator.share({ title: 'Ondrift', text: text, url: url }); return; }
+      } catch (e) { if (e && e.name === 'AbortError') return; }
+      try { await navigator.clipboard.writeText(url); showToast('Enlace copiado', 'success'); }
+      catch (e) { prompt('Copia este enlace:', url); }
+    };
+    const regen = document.createElement('button'); regen.className = 'btn btn-secondary btn-sm';
+    regen.style.cssText = 'display:block;width:100%;margin-top:8px';
+    regen.textContent = 'Crear enlace nuevo';
+    regen.onclick = async function() {
+      regen.disabled = true;
+      const r = await coachRpc('regenerate_invite');
+      if (r.ok && r.data && r.data.ok) { showToast('Enlace nuevo creado', 'success'); loadBilling(); }
+      else { err.textContent = (r.data && r.data.error) || 'No se pudo crear el enlace.'; regen.disabled = false; }
+    };
+    box.append(share, regen);
+  }
+  box.appendChild(err);
+  container.appendChild(box);
 }
 
 // ── Pago con Stripe ─────────────────────────────────────────
@@ -5345,6 +5478,7 @@ function handlePaymentReturn() {
     await loadPlanStatus();
     const ps = S.planStatus;
     if (ps && ps.can_write && ['individual', 'duo', 'grupo4', 'club'].indexOf(ps.plan) !== -1) {
+      loadBilling();
       showToast('Plan ' + (PLAN_LABELS[ps.plan] || ps.plan) + ' activo. ¡Gracias!', 'success');
       return;
     }
@@ -5421,7 +5555,9 @@ function buildProfileSheet() {
     planTxt.textContent = 'Gratis de por vida';
   } else {
     planTxt.textContent = 'Plan ' + (PLAN_LABELS[plan] || plan);
-    if (plan !== 'club') {
+    const isMember = !!(S.billing && S.billing.role === 'member');
+    buildBillingSection(planBox);
+    if (plan !== 'club' && !isMember) {
       const perr = document.createElement('div'); perr.style.cssText = 'color:var(--red);font-size:0.78rem;margin-top:6px;min-height:0';
       const mg = document.createElement('button'); mg.className = 'btn btn-secondary';
       mg.style.cssText = 'display:block;width:100%;margin-top:10px';
@@ -10166,6 +10302,15 @@ restoreAthleteSession().catch(function () {})
     }
     if (/[?&]registro(=|&|$)/.test(window.location.search)) {
       history.replaceState(null, '', window.location.pathname + window.location.hash);
+    }
+    // Enlace de invitación a un Dúo / Grupo: /app/?invitacion=CODIGO
+    const invM = /[?&]invitacion=([a-f0-9]{16,64})/i.exec(window.location.search);
+    if (invM) {
+      try { localStorage.setItem(INVITE_KEY, invM[1].toLowerCase()); } catch (e) {}
+      S.pendingInviteMem = invM[1].toLowerCase();
+      history.replaceState(null, '', window.location.pathname + window.location.hash);
+      track('invite_link_opened', {});
+      if (!S.role) { S.role = 'pin'; S.pinMode = 'signup'; S.pinBuffer = ''; S.pinError = false; S.signupError = null; }
     }
     handlePaymentReturn();
     renderAsync();

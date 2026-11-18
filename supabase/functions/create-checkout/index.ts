@@ -31,10 +31,13 @@ Deno.serve(async (req: Request) => {
 
     const { data: coach } = await admin
       .from("coaches")
-      .select("id, display_name, stripe_customer_id, subscription_status")
+      .select("id, display_name, stripe_customer_id, subscription_status, billing_owner_id")
       .eq("id", user.id)
       .maybeSingle();
     if (!coach) return json({ error: "Solo los entrenadores pueden suscribirse." }, 403);
+    if (coach.billing_owner_id) {
+      return json({ error: "Tu plan lo paga otro entrenador de tu Dúo o Grupo. Si quieres pagar por tu cuenta, pídele que te quite de su plan.", code: "group_member" }, 409);
+    }
     if (["active", "trialing", "past_due"].includes(coach.subscription_status || "")) {
       return json({ error: "Ya tienes una suscripción. Gestiónala desde 'Mi suscripción'.", code: "already_subscribed" }, 409);
     }
