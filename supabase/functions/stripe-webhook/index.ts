@@ -48,14 +48,15 @@ async function verifySignature(payload: string, header: string, secret: string) 
   return sigs.some((s) => safeEqual(s, mac));
 }
 
-// Plan a partir de los metadatos de la suscripción o, si faltan, del precio.
+// Plan a partir del PRECIO que se está pagando ahora. Los metadatos se ponen en
+// la primera compra y no cambian si el cliente se pasa de plan en el portal de
+// Stripe (Individual → Dúo, mensual → anual), así que solo sirven de respaldo.
 function planOf(sub: any): string | null {
-  if (sub?.metadata?.plan) return sub.metadata.plan;
   const priceId = sub?.items?.data?.[0]?.price?.id;
   for (const [plan, byInterval] of Object.entries(priceTable())) {
     if (Object.values(byInterval).includes(priceId)) return plan;
   }
-  return null;
+  return sub?.metadata?.plan || null;
 }
 
 function periodEnd(sub: any): string | null {
