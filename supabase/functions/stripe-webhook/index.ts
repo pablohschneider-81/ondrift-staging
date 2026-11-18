@@ -130,9 +130,14 @@ Deno.serve(async (req: Request) => {
       }
       case "customer.subscription.created":
       case "customer.subscription.updated":
-      case "customer.subscription.deleted":
-        await applySubscription(admin, obj);
+      case "customer.subscription.deleted": {
+        // Stripe no garantiza el orden de los avisos: un 'updated' antiguo podría
+        // llegar después de un 'deleted' y reactivar el plan. Por eso se pide a
+        // Stripe el estado ACTUAL de la suscripción y se aplica ese.
+        const fresh = await stripe("GET", `/subscriptions/${obj.id}`);
+        await applySubscription(admin, fresh);
         break;
+      }
       default:
         break; // El resto de avisos no cambian nada en Ondrift.
     }
