@@ -4312,6 +4312,36 @@ function buildCoachPending() {
     : 'Tu cuenta fue creada correctamente. Un administrador debe aprobarla antes de que puedas entrar. Vuelve a intentarlo m\u00e1s tarde.';
   card.appendChild(p);
 
+  const payPlan = rejected ? null : PAY_PLANS.find(function(x) { return x.id === getPendingPlan(); });
+  if (payPlan) {
+    h2.textContent = 'Paga tu plan ' + payPlan.name;
+    p.textContent = 'Tu cuenta est\u00e1 creada. El plan ' + payPlan.name + ' (' + payPlan.who + ') no tiene prueba gratis: al pagar, la cuenta queda activa al momento y podr\u00e1s invitar a tus compa\u00f1eros.';
+    if (!S.planInterval) S.planInterval = 'month';
+    const seg = document.createElement('div');
+    seg.style.cssText = 'display:flex;gap:6px;margin:16px 0 0';
+    [['month', 'Mensual'], ['year', 'Anual \u00b7 2 meses gratis']].forEach(function(o) {
+      const b = document.createElement('button');
+      b.className = 'btn ' + (S.planInterval === o[0] ? 'btn-primary' : 'btn-secondary') + ' btn-sm';
+      b.style.cssText = 'flex:1;width:auto';
+      b.textContent = o[1];
+      b.onclick = function() { S.planInterval = o[0]; render(); };
+      seg.appendChild(b);
+    });
+    card.appendChild(seg);
+    const yearly = S.planInterval === 'year';
+    const payBtn = document.createElement('button');
+    payBtn.className = 'btn btn-primary';
+    payBtn.style.marginTop = '12px';
+    payBtn.textContent = 'Pagar ahora el ' + payPlan.name + ' \u00b7 ' + (yearly ? payPlan.year + ' \u20ac/a\u00f1o' : payPlan.month + ' \u20ac/mes');
+    const payErr = document.createElement('div');
+    payErr.style.cssText = 'color:var(--red);font-size:0.8rem;min-height:1em;margin-top:8px;text-align:center';
+    payBtn.onclick = function() { startCheckout(payPlan.id, S.planInterval, payBtn, payErr); };
+    const note = document.createElement('div');
+    note.style.cssText = 'font-size:0.75rem;color:var(--text2);line-height:1.45;margin-top:4px;text-align:center';
+    note.textContent = 'IVA incluido. El pago lo procesa Stripe; Ondrift no ve ni guarda tu tarjeta.';
+    card.append(payBtn, payErr, note);
+  }
+
   const btn = document.createElement('button');
   btn.className = 'btn btn-secondary';
   btn.style.marginTop = '16px';
@@ -4468,6 +4498,14 @@ function buildPin() {
     err.style.marginTop = '12px';
     card.appendChild(err);
   }
+  const chosenPlan = getPendingPlan();
+  if (chosenPlan && !getPendingInvite()) {
+    const pp = PAY_PLANS.find(function(x) { return x.id === chosenPlan; });
+    const pl = document.createElement('div');
+    pl.style.cssText = 'margin-top:12px;font-size:0.82rem;line-height:1.45;color:var(--text2);text-align:center';
+    pl.textContent = 'Has elegido el plan ' + pp.name + ' (' + pp.month + ' €/mes). ' + (isSignup ? 'Crea tu cuenta, confirma el email y entra' : 'Entra con tu cuenta') + ': después pagas y la cuenta queda activa al momento.';
+    card.appendChild(pl);
+  }
   if (getPendingInvite()) {
     const inv = document.createElement('div');
     inv.style.cssText = 'margin-top:12px;font-size:0.82rem;line-height:1.45;color:var(--text2);text-align:center';
@@ -4481,7 +4519,7 @@ function buildPin() {
     await tryJoinInvite();
     const status = await fetchCoachStatus();
     S.coachEmail = null;
-    if (status === 'approved') { S.role = 'coach'; S.tab = 0; fetchPendingCoachCount(); renderAsync(); maybeShowCoachSurvey(); }
+    if (status === 'approved') { clearPendingPlan(); S.role = 'coach'; S.tab = 0; fetchPendingCoachCount(); renderAsync(); maybeShowCoachSurvey(); }
     else if (status === null) {
       // No se pudo leer el estado (red caída o timeout): devolvemos el botón
       // en vez de dejarlo colgado en "Entrando…".
@@ -5263,6 +5301,22 @@ function buildPlanBanner() {
 // (plazas, quién puede unirse, propagación al cancelar) viven en la base de datos:
 // my_billing, join_billing_group, remove_billing_member, regenerate_invite.
 const INVITE_KEY = 'ondrift_invite';
+// Plan elegido en la landing (/app/?registro&plan=duo|grupo4): Dúo y Grupo de 4 no tienen
+// prueba gratis; tras registrarse y entrar, la pantalla de cuenta pendiente ofrece pagarlo.
+const PLAN_KEY = 'ondrift_plan';
+function getPendingPlan() {
+  let p = S.pendingPlanMem || null;
+  try { p = localStorage.getItem(PLAN_KEY) || p; } catch (e) {}
+  return (p === 'duo' || p === 'grupo4') ? p : null;
+}
+function setPendingPlan(p) {
+  S.pendingPlanMem = p;
+  try { localStorage.setItem(PLAN_KEY, p); } catch (e) {}
+}
+function clearPendingPlan() {
+  S.pendingPlanMem = null;
+  try { localStorage.removeItem(PLAN_KEY); } catch (e) {}
+}
 function getPendingInvite() {
   let t = S.pendingInviteMem || null;
   try { t = localStorage.getItem(INVITE_KEY) || t; } catch (e) {}
@@ -5509,7 +5563,10 @@ function handlePaymentReturn() {
   const m = /[?&]pago=(ok|cancelado)/.exec(window.location.search);
   if (!m) return;
   history.replaceState(null, '', window.location.pathname + window.location.hash);
+  clearPendingPlan();
   if (m[1] === 'cancelado') { showToast('Pago cancelado. No se ha cobrado nada.'); return; }
+  // La sesión de entrenador no se guarda en el dispositivo: al volver de Stripe hay que entrar otra vez.
+  if (!S.role) { S.role = 'pin'; S.pinMode = 'login'; S.pinBuffer = ''; S.pinError = false; S.signupError = null; }
   track('checkout_return_ok', {});
   showToast('Pago recibido. Activando tu plan…', 'success');
   let tries = 0;
@@ -10334,6 +10391,9 @@ showLoading();
 restoreAthleteSession().catch(function () {})
   .then(function () { return loadRosterForLogin(); }).catch(function () {})
   .then(function () {
+    const planM = /[?&]plan=(duo|grupo4)(&|$)/.exec(window.location.search);
+    if (planM) { setPendingPlan(planM[1]); track('plan_from_landing', { plan: planM[1] }); }
+    const invM = /[?&]invitacion=([a-f0-9]{16,64})/i.exec(window.location.search);
     // Enlace desde la landing ("Empezar prueba"): /app/?registro abre directamente
     // "Crear cuenta de entrenador". Solo si no hay sesión; la cuenta sigue quedando
     // pendiente hasta que el admin la apruebe.
@@ -10344,8 +10404,7 @@ restoreAthleteSession().catch(function () {})
     if (/[?&]registro(=|&|$)/.test(window.location.search)) {
       history.replaceState(null, '', window.location.pathname + window.location.hash);
     }
-    // Enlace de invitación a un Dúo / Grupo: /app/?invitacion=CODIGO
-    const invM = /[?&]invitacion=([a-f0-9]{16,64})/i.exec(window.location.search);
+    // Enlace de invitación a un Dúo / Grupo: /app/?invitacion=CODIGO (leído arriba)
     if (invM) {
       try { localStorage.setItem(INVITE_KEY, invM[1].toLowerCase()); } catch (e) {}
       S.pendingInviteMem = invM[1].toLowerCase();
